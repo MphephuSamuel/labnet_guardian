@@ -34,64 +34,68 @@ This repository contains the **Flutter frontend** of the system.
 
 ## 📂 Project Structure
 
-```bash
 lib/
-├── main.dart
-├── screens/
-│   ├── login_screen.dart
-│   ├── dashboard_screen.dart
-│   ├── devices_screen.dart
-│   ├── alerts_screen.dart
-│   ├── history_screen.dart
-│   ├── analytics_screen.dart
-│   ├── settings_screen.dart
-│   ├── profile_screen.dart
-│   ├── search_screen.dart
-│   ├── support_screen.dart
-│   └── ai_assistant_screen.dart
+├── main.dart  
+├── screens/ # Full app pages (Dashboard, Devices, Alerts, etc.)
+│ ├── login_screen.dart
+│ ├── dashboard_screen.dart
+│ ├── devices_screen.dart
+│ ├── alerts_screen.dart
+│ ├── history_screen.dart
+│ ├── analytics_screen.dart
+│ ├── settings_screen.dart
+│ ├── profile_screen.dart
+│ ├── search_screen.dart
+│ ├── support_screen.dart
+│ └── ai_assistant_screen.dart
 │
-├── widgets/
-│   ├── dashboard/
-│   │   ├── dashboard_header.dart
-│   │   ├── stat_card.dart
-│   │   └── activity_banner.dart
-│   ├── devices/
-│   │   ├── device_card.dart
-│   │   └── device_filter.dart
-│   ├── alerts/
-│   │   ├── alert_card.dart
-│   │   └── alert_badge.dart
-│   ├── history/
-│   │   └── history_item.dart
-│   ├── analytics/
-│   │   ├── chart_widget.dart
-│   │   └── stats_card.dart
-│   ├── settings/
-│   │   └── settings_tile.dart
-│   └── common/
-│       ├── custom_button.dart
-│       ├── custom_text_field.dart
-│       ├── loading_indicator.dart
-│       ├── app_drawer.dart
-│       └── bottom_nav_bar.dart
+├── widgets/ # Reusable UI components
+│ ├── dashboard/ # Dashboard-specific widgets
+│ │ ├── dashboard_header.dart
+│ │ ├── stat_card.dart
+│ │ └── activity_banner.dart
+│ │
+│ ├── devices/ # Device-related widgets
+│ │ ├── device_card.dart
+│ │ └── device_filter.dart
+│ │
+│ ├── alerts/ # Alert-related widgets
+│ │ ├── alert_card.dart
+│ │ └── alert_badge.dart
+│ │
+│ ├── history/ # History screen widgets
+│ │ └── history_item.dart
+│ │
+│ ├── analytics/ # Analytics widgets
+│ │ ├── chart_widget.dart
+│ │ └── stats_card.dart
+│ │
+│ ├── settings/ # Settings screen widgets
+│ │ └── settings_tile.dart
+│ │
+│ └── common/ # Shared widgets across the app
+│ ├── custom_button.dart
+│ ├── custom_text_field.dart
+│ ├── loading_indicator.dart
+│ ├── app_drawer.dart
+│ └── bottom_nav_bar.dart
 │
-├── models/
-│   ├── device.dart
-│   ├── alert.dart
-│   ├── user.dart
-│   └── history.dart
+├── models/ # Data classes (Device, Alert, User, etc.)
+│ ├── device.dart
+│ ├── alert.dart
+│ ├── user.dart
+│ └── history.dart
 │
-├── services/
-│   ├── device_service.dart
-│   ├── alert_service.dart
-│   ├── auth_service.dart
-│   └── analytics_service.dart
+├── services/ # Business logic & mock data (for now)
+│ ├── device_service.dart
+│ ├── alert_service.dart
+│ ├── auth_service.dart
+│ └── analytics_service.dart
 │
-├── utils/
-│   ├── colors.dart
-│   ├── constants.dart
-│   └── helpers.dart
-```
+├── utils/ # Helpers, constants, and styling
+│ ├── colors.dart
+│ ├── constants.dart
+│ └── helpers.dart
 
 ---
 
@@ -196,16 +200,17 @@ We follow a simple Git workflow to work as a team.
 
 ```mermaid
 graph TD
-    A[main (stable)] --> B[development]
-    B --> C[feature/login-ui]
-    B --> D[feature/dashboard-ui]
-    B --> E[feature/devices-screen]
+    A["main (stable)"] --> B["development"]
+    B --> C["feature/login-ui"]
+    B --> D["feature/dashboard-ui"]
+    B --> E["feature/devices-screen"]
 
     C --> B
     D --> B
     E --> B
 
     B --> A
+```
 
 ## 📸 Screens
 
@@ -250,4 +255,3 @@ This project is developed for academic purposes at the University of Mpumalanga.
 ## ⭐ Notes
 
 This project is part of the BICT421 Mini Project (LabNet Guardian) and demonstrates practical implementation of network monitoring and security concepts.
-```
