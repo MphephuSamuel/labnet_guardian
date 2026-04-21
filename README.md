@@ -34,8 +34,9 @@ This repository contains the **Flutter frontend** of the system.
 
 ## 📂 Project Structure
 
+```bash
 lib/
-├── main.dart  
+├── main.dart
 ├── screens/ # Full app pages (Dashboard, Devices, Alerts, etc.)
 │ ├── login_screen.dart
 │ ├── dashboard_screen.dart
@@ -96,6 +97,7 @@ lib/
 │ ├── colors.dart
 │ ├── constants.dart
 │ └── helpers.dart
+```
 
 ---
 
