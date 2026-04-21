@@ -196,8 +196,6 @@ We follow a simple Git workflow to work as a team.
 
 ---
 
-### Branches
-
 ## 🔄 Git Workflow Diagram
 
 ```mermaid
