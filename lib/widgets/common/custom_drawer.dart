@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../screens/advanced_search_screen.dart';
 
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({super.key});
@@ -138,6 +139,13 @@ class CustomDrawer extends StatelessWidget {
                     iconBgColor: const Color(0xFF3B82F6).withValues(alpha: 0.1), // Blue
                     iconColor: const Color(0xFF3B82F6),
                     textColor: textColor,
+                    onTap: () {
+                      Navigator.pop(context); // Close drawer
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const AdvancedSearchScreen()),
+                      );
+                    },
                   ),
                   _buildMenuItem(
                     icon: Icons.help_outline,
@@ -245,6 +253,7 @@ class CustomDrawer extends StatelessWidget {
     required Color iconBgColor,
     required Color iconColor,
     required Color textColor,
+    VoidCallback? onTap,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
@@ -270,7 +279,7 @@ class CustomDrawer extends StatelessWidget {
           Icons.chevron_right,
           color: textColor.withValues(alpha: 0.5),
         ),
-        onTap: () {},
+        onTap: onTap ?? () {},
       ),
     );
   }
