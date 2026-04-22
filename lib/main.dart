@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/theme_provider.dart';
 import 'layout/main_layout.dart';
+import 'screens/login_screen.dart';
 
 void main() {
   runApp(
@@ -47,7 +48,7 @@ class MyApp extends StatelessWidget {
             ),
             cardColor: const Color(0xFF1A1A2E),
           ),
-          home: const MainLayout(),
+          home: const LoginScreen(),
         );
       },
     );
