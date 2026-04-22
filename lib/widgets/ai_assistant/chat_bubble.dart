@@ -32,7 +32,10 @@ class ChatBubble extends StatelessWidget {
                 color: Colors.white,
                 size: 24,
               ),
-            ),
+            )
+          else
+            const SizedBox(width: 48), // Left spacer for user messages
+
           Expanded(
             child: Column(
               crossAxisAlignment: isBot ? CrossAxisAlignment.start : CrossAxisAlignment.end,
@@ -76,8 +79,23 @@ class ChatBubble extends StatelessWidget {
               ],
             ),
           ),
+
           if (!isBot)
-            const SizedBox(width: 48), // Spacer for user message to offset from left
+            Container(
+              margin: const EdgeInsets.only(left: 12),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.purple.shade100,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.person,
+                color: Colors.purple.shade800,
+                size: 24,
+              ),
+            )
+          else
+            const SizedBox(width: 48), // Right spacer for bot messages
         ],
       ),
     );

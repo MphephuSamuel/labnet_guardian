@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 class ChatInputField extends StatelessWidget {
+  final TextEditingController controller;
   final VoidCallback onSend;
 
-  const ChatInputField({super.key, required this.onSend});
+  const ChatInputField({super.key, required this.controller, required this.onSend});
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +24,7 @@ class ChatInputField extends StatelessWidget {
         children: [
           Expanded(
             child: TextField(
+              controller: controller,
               decoration: InputDecoration(
                 hintText: 'Ask me anything...',
                 hintStyle: TextStyle(color: Colors.grey.shade500),
