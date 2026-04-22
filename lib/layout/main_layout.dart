@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/common/custom_app_bar.dart';
 import '../widgets/common/custom_bottom_nav_bar.dart';
+import '../widgets/common/custom_drawer.dart';
 import '../screens/dashboard_screen.dart';
 import '../screens/devices_screen.dart';
 import '../screens/alerts_screen.dart';
@@ -35,11 +36,7 @@ class _MainLayoutState extends State<MainLayout> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const CustomAppBar(),
-      drawer: const Drawer(
-        child: Center(
-          child: Text('App Drawer Placeholder'),
-        ),
-      ),
+      drawer: const CustomDrawer(),
       body: _screens[_currentIndex],
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _currentIndex,
