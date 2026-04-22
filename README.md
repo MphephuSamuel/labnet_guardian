@@ -51,6 +51,9 @@ lib/
 │ ├── profile_screen.dart # (planned)
 │ └── support_screen.dart # (planned)
 │
+├── layout/ # App layout wrappers
+│ └── main_layout.dart
+│
 ├── widgets/ # Reusable UI components
 │ ├── dashboard/ # Dashboard-specific widgets
 │ │ ├── dashboard_header.dart
