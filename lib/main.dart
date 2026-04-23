@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'providers/theme_provider.dart';
 import 'layout/main_layout.dart';
 import 'screens/login_screen.dart';
+import 'screens/analytics_screen.dart';
 
 void main() {
   runApp(
