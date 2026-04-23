@@ -15,7 +15,7 @@ class LoginScreen extends StatelessWidget {
               MaterialPageRoute(builder: (context) => const AuthenticationScreen()),
             );
           },
-          child: const Text('Login'),
+          child: const Text('Login (in login screen)'),
         ),
       ),
     );
