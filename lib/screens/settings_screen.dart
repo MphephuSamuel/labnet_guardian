@@ -3,18 +3,15 @@ import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import '../utils/colors.dart';
 import '../utils/constants.dart';
-import '../widgets/profile/profile_info_card.dart';
-import '../widgets/settings/settings_section.dart';
-import '../widgets/settings/settings_tile.dart';
 
-class ProfileSettingsScreen extends StatefulWidget {
-  const ProfileSettingsScreen({super.key});
+class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({super.key});
 
   @override
-  State<ProfileSettingsScreen> createState() => _ProfileSettingsScreenState();
+  State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
+class _SettingsScreenState extends State<SettingsScreen> {
   late bool _biometricEnabled = true;
 
   @override
@@ -35,46 +32,16 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 _buildHeader(context, isDark, themeProvider),
                 const SizedBox(height: AppConstants.paddingXl),
 
-                // Profile Card
-                const ProfileInfoCard(
-                  name: AppConstants.userName,
-                  email: AppConstants.userEmail,
-                  role: AppConstants.userRole,
-                  avatarInitial: AppConstants.avatarInitial,
-                ),
-                const SizedBox(height: AppConstants.paddingXl),
-
-                // Account Information Section
-                SettingsSection(
-                  title: AppConstants.accountInfoSection,
-                  isDark: isDark,
-                  children: [
-                    SettingsTile(
-                      icon: Icons.person_outline,
-                      label: AppConstants.fullNameLabel,
-                      value: AppConstants.userName,
-                      iconColor: AppColors.iconPurple,
-                      isDark: isDark,
-                    ),
-                    SettingsTile(
-                      icon: Icons.email_outlined,
-                      label: AppConstants.emailLabel,
-                      value: AppConstants.userEmail,
-                      iconColor: AppColors.iconPink,
-                      isDark: isDark,
-                    ),
-                    SettingsTile(
-                      icon: Icons.security_outlined,
-                      label: AppConstants.roleLabel,
-                      value: AppConstants.userRole,
-                      iconColor: AppColors.iconBlue,
-                      isDark: isDark,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppConstants.paddingXl),
-
                 // Security Settings Section
+                Text(
+                  'Security Settings',
+                  style: TextStyle(
+                    fontSize: AppConstants.fontSizeLarge,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.getTextPrimary(isDark),
+                  ),
+                ),
+                const SizedBox(height: AppConstants.paddingDefault),
                 _buildSecuritySettings(isDark),
               ],
             ),
@@ -100,7 +67,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
           ),
         ),
         Text(
-          AppConstants.profileTitle,
+          'Settings',
           style: TextStyle(
             fontSize: AppConstants.fontSizeXLarge,
             fontWeight: FontWeight.bold,
