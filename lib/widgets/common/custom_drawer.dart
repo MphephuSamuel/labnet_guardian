@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../screens/advanced_search_screen.dart';
-import '../../screens/profile_settings_screen.dart';
+import '../../screens/profile_screen.dart';
+import '../../screens/settings_screen.dart';
 import '../../screens/login_screen.dart';
 
 class CustomDrawer extends StatelessWidget {
@@ -60,7 +61,7 @@ class CustomDrawer extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const ProfileSettingsScreen(),
+                      builder: (context) => const ProfileScreen(),
                     ),
                   );
                 },
@@ -155,7 +156,7 @@ class CustomDrawer extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const ProfileSettingsScreen(),
+                          builder: (context) => const SettingsScreen(),
                         ),
                       );
                     },

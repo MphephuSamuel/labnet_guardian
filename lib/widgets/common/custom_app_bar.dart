@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
-import '../../screens/profile_settings_screen.dart';
+import '../../screens/profile_screen.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({super.key});
@@ -21,7 +21,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       actions: [
         IconButton(
-          icon: Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
+          icon: Icon(
+            themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+          ),
           onPressed: () {
             themeProvider.toggleTheme();
           },
@@ -35,9 +37,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         GestureDetector(
           onTap: () {
             Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const ProfileSettingsScreen(),
-              ),
+              MaterialPageRoute(builder: (context) => const ProfileScreen()),
             );
           },
           child: const Padding(
@@ -46,7 +46,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               backgroundColor: Colors.purpleAccent,
               child: Text(
                 'A',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
