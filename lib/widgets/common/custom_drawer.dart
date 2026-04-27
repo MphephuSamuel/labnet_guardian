@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../screens/advanced_search_screen.dart';
+import '../../screens/profile_screen.dart';
+import '../../screens/settings_screen.dart';
 import '../../screens/login_screen.dart';
 
 class CustomDrawer extends StatelessWidget {
@@ -11,8 +13,10 @@ class CustomDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = themeProvider.isDarkMode;
-    
-    final drawerBgColor = isDark ? const Color(0xFF0F0F1A) : const Color(0xFFF8F9FA);
+
+    final drawerBgColor = isDark
+        ? const Color(0xFF0F0F1A)
+        : const Color(0xFFF8F9FA);
     final textColor = isDark ? Colors.white : Colors.black;
 
     return Drawer(
@@ -22,7 +26,10 @@ class CustomDrawer extends StatelessWidget {
           children: [
             // Header
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20.0,
+                vertical: 16.0,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -41,80 +48,91 @@ class CustomDrawer extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             // Profile Card
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFF8B5CF6), // Purple
-                      Color(0xFFEC4899), // Pink
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ProfileScreen(),
+                    ),
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFF8B5CF6), // Purple
+                        Color(0xFFEC4899), // Pink
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20.0),
                   ),
-                  borderRadius: BorderRadius.circular(20.0),
-                ),
-                padding: const EdgeInsets.all(20.0),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: Colors.white.withValues(alpha: 0.2),
-                      radius: 30,
-                      child: const Text(
-                        'A',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                  padding: const EdgeInsets.all(20.0),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: Colors.white.withValues(alpha: 0.2),
+                        radius: 30,
+                        child: const Text(
+                          'A',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 16.0),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Admin User',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                      const SizedBox(width: 16.0),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Admin User',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Network\nAdministrator',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
+                            SizedBox(height: 8),
+                            Text(
+                              'Network\nAdministrator',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 12),
-                          Text(
-                            'admin@ump.ac.za',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
+                            SizedBox(height: 12),
+                            Text(
+                              'admin@ump.ac.za',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    const Icon(
-                      Icons.chevron_right,
-                      color: Colors.white,
-                    ),
-                  ],
+                      const Icon(Icons.chevron_right, color: Colors.white),
+                    ],
+                  ),
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16.0),
-            
+
             // Menu Items
             Expanded(
               child: ListView(
@@ -133,18 +151,31 @@ class CustomDrawer extends StatelessWidget {
                     iconBgColor: const Color(0xFFEC4899).withValues(alpha: 0.1),
                     iconColor: const Color(0xFFEC4899),
                     textColor: textColor,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsScreen(),
+                        ),
+                      );
+                    },
                   ),
                   _buildMenuItem(
                     icon: Icons.search_outlined,
                     title: 'Advanced Search',
-                    iconBgColor: const Color(0xFF3B82F6).withValues(alpha: 0.1), // Blue
+                    iconBgColor: const Color(
+                      0xFF3B82F6,
+                    ).withValues(alpha: 0.1), // Blue
                     iconColor: const Color(0xFF3B82F6),
                     textColor: textColor,
                     onTap: () {
                       Navigator.pop(context); // Close drawer
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const AdvancedSearchScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const AdvancedSearchScreen(),
+                        ),
                       );
                     },
                   ),
@@ -158,9 +189,9 @@ class CustomDrawer extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             Divider(color: isDark ? Colors.white12 : Colors.black12, height: 1),
-            
+
             // Theme Toggle
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -174,13 +205,18 @@ class CustomDrawer extends StatelessWidget {
                       color: isDark ? Colors.white12 : Colors.black12,
                     ),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20.0,
+                    vertical: 12.0,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Icon(
                         Icons.light_mode,
-                        color: !isDark ? const Color(0xFF8B5CF6) : (isDark ? Colors.white38 : Colors.black38),
+                        color: !isDark
+                            ? const Color(0xFF8B5CF6)
+                            : (isDark ? Colors.white38 : Colors.black38),
                       ),
                       Text(
                         isDark ? 'Dark Mode' : 'Light Mode',
@@ -191,14 +227,16 @@ class CustomDrawer extends StatelessWidget {
                       ),
                       Icon(
                         Icons.dark_mode,
-                        color: isDark ? const Color(0xFF8B5CF6) : (isDark ? Colors.white38 : Colors.black38),
+                        color: isDark
+                            ? const Color(0xFF8B5CF6)
+                            : (isDark ? Colors.white38 : Colors.black38),
                       ),
                     ],
                   ),
                 ),
               ),
             ),
-            
+
             // Logout Button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -206,7 +244,9 @@ class CustomDrawer extends StatelessWidget {
                 onTap: () {
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => const LoginScreen(),
+                    ),
                     (Route<dynamic> route) => false,
                   );
                 },
@@ -214,13 +254,18 @@ class CustomDrawer extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(24.0),
-                    border: Border.all(color: Colors.red.withValues(alpha: 0.5)),
+                    border: Border.all(
+                      color: Colors.red.withValues(alpha: 0.5),
+                    ),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 12.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.logout, color: Colors.red.withValues(alpha: 0.8)),
+                      Icon(
+                        Icons.logout,
+                        color: Colors.red.withValues(alpha: 0.8),
+                      ),
                       const SizedBox(width: 8.0),
                       Text(
                         'Logout',
@@ -234,7 +279,7 @@ class CustomDrawer extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             // Version Text
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -264,7 +309,10 @@ class CustomDrawer extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8.0),
       child: ListTile(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12.0,
+          vertical: 4.0,
+        ),
         leading: Container(
           padding: const EdgeInsets.all(8.0),
           decoration: BoxDecoration(
@@ -275,10 +323,7 @@ class CustomDrawer extends StatelessWidget {
         ),
         title: Text(
           title,
-          style: TextStyle(
-            color: textColor,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(color: textColor, fontWeight: FontWeight.w600),
         ),
         trailing: Icon(
           Icons.chevron_right,
