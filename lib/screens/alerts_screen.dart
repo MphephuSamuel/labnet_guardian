@@ -31,15 +31,62 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
 
   Future<void> _loadAlerts() async {
     setState(() { _isLoading = true; _error = null; });
-    final result = await ApiService.fetchAlerts();
+    
+    // Mockup data for demonstration
+    await Future.delayed(const Duration(milliseconds: 800));
     if (!mounted) return;
+    
+    final mockAlerts = [
+      AlertItem(
+        id: '1',
+        title: 'Suspicious Login Attempt',
+        description: 'Multiple failed login attempts detected from unknown device',
+        device: 'LAB-PC-001',
+        ip: '192.168.1.45',
+        time: '2 minutes ago',
+        severity: AlertSeverity.critical,
+      ),
+      AlertItem(
+        id: '2',
+        title: 'Unusual Network Traffic',
+        description: 'Abnormal data transfer patterns detected on device',
+        device: 'IOT-SENSOR-01',
+        ip: '192.168.1.112',
+        time: '15 minutes ago',
+        severity: AlertSeverity.warning,
+      ),
+      AlertItem(
+        id: '3',
+        title: 'New Device Connected',
+        description: 'Previously unseen device joined the network',
+        device: 'PHONE-CS-023',
+        ip: '192.168.1.92',
+        time: '1 hour ago',
+        severity: AlertSeverity.info,
+      ),
+      AlertItem(
+        id: '4',
+        title: 'Firewall Rule Triggered',
+        description: 'Blocked connection attempt to restricted port',
+        device: 'TABLET-ENG-015',
+        ip: '192.168.1.78',
+        time: '2 hours ago',
+        severity: AlertSeverity.warning,
+      ),
+      AlertItem(
+        id: '5',
+        title: 'System Update Available',
+        description: 'Security patches ready for installation',
+        device: 'LAB-PC-002',
+        ip: '192.168.1.46',
+        time: '3 hours ago',
+        severity: AlertSeverity.info,
+      ),
+    ];
+    
     setState(() {
       _isLoading = false;
-      if (result.hasError) {
-        _error = result.error;
-      } else {
-        _alerts = result.data ?? [];
-      }
+      _alerts = mockAlerts;
     });
   }
 
@@ -68,10 +115,10 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
   Widget build(BuildContext context) {
     final theme = Provider.of<ThemeProvider>(context);
     final isDark = theme.isDarkMode;
-    final bgColor   = isDark ? AppColors.darkBg      : AppColors.lightBg;
-    final cardColor = isDark ? AppColors.darkCard     : AppColors.lightCard;
-    final textColor = isDark ? AppColors.textDarkPrimary     : AppColors.textLight;
-    final subColor  = isDark ? AppColors.textDarkSecondary  : AppColors.textLightSecondary;
+    final bgColor = AppColors.getBgColor(isDark);
+    final cardColor = AppColors.getCardColor(isDark);
+    final textColor = AppColors.getTextPrimary(isDark);
+    final subColor = AppColors.getTextSecondary(isDark);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -79,7 +126,6 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _topBar(isDark, theme, textColor, context),
             Expanded(
               child: RefreshIndicator(
                 color: AppColors.gradientStart,
@@ -124,80 +170,6 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  // ── Top bar ────────────────────────────────────────────────────────────────
-  Widget _topBar(bool isDark, ThemeProvider theme, Color textColor, BuildContext ctx) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-      child: Row(
-        children: [
-          Icon(Icons.menu, color: textColor, size: 26),
-          const Spacer(),
-          _circleBtn(
-            isDark ? Icons.wb_sunny_outlined : Icons.nightlight_round_outlined,
-            isDark, textColor, onTap: theme.toggleTheme,
-          ),
-          const SizedBox(width: 10),
-          // Notification bell — tapping here does nothing extra since we ARE
-          // already on the Alerts screen; the dot still shows unread count.
-          Stack(
-            children: [
-              _circleBtn(Icons.notifications_outlined, isDark, textColor),
-              if (_criticalCount > 0)
-                Positioned(
-                  right: 8, top: 8,
-                  child: Container(
-                    width: 8, height: 8,
-                    decoration: const BoxDecoration(
-                      color: AppColors.critical, shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(width: 10),
-          // Avatar — navigates to Profile & Settings
-          GestureDetector(
-            onTap: () => _openProfile(ctx),
-            child: Container(
-              width: 40, height: 40,
-              decoration: const BoxDecoration(
-                color: AppColors.gradientStart, shape: BoxShape.circle,
-              ),
-              child: const Center(
-                child: Text('A',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                    )),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _circleBtn(IconData icon, bool isDark, Color color, {VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 40, height: 40,
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkCard : AppColors.lightCard,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
-              blurRadius: 8, offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Icon(icon, color: color, size: 20),
       ),
     );
   }
