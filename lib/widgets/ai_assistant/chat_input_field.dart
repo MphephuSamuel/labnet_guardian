@@ -14,7 +14,7 @@ class ChatInputField extends StatelessWidget {
         color: Theme.of(context).scaffoldBackgroundColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             offset: const Offset(0, -4),
             blurRadius: 10,
           ),
@@ -41,7 +41,7 @@ class ChatInputField extends StatelessWidget {
           const SizedBox(width: 12),
           Container(
             decoration: BoxDecoration(
-              color: Colors.purple.withOpacity(0.1),
+              color: Colors.purple.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: IconButton(

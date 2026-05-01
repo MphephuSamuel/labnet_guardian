@@ -132,7 +132,7 @@ class PdfService {
   // 🧾 DEVICE TABLE
   // ===========================
   static pw.Widget _buildDeviceTable() {
-    return pw.Table.fromTextArray(
+    return pw.TableHelper.fromTextArray(
       headers: ["IP Address", "MAC Address", "Usage"],
       data: [
         ["192.168.1.2", "AA:BB:CC:DD", "120 MB"],
@@ -146,7 +146,7 @@ class PdfService {
   // 🚨 THREAT TABLE
   // ===========================
   static pw.Widget _buildThreatTable() {
-    return pw.Table.fromTextArray(
+    return pw.TableHelper.fromTextArray(
       headers: ["Time", "Threat Type", "Status"],
       data: [
         ["10:00", "Port Scan", "Blocked"],
