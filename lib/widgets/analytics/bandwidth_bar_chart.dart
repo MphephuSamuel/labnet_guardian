@@ -65,7 +65,7 @@ class BandwidthBarChart extends StatelessWidget {
                   touchTooltipData: BarTouchTooltipData(
                     getTooltipColor: (group) => Colors.black,
 tooltipRoundedRadius: 8,
-                    getTooltipItem: (group, _, rod, __) {
+                    getTooltipItem: (group, _, rod, _) {
                       return BarTooltipItem(
                         "${rod.toY} GB",
                         const TextStyle(color: Colors.white),

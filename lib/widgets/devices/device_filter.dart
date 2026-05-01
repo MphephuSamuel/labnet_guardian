@@ -26,14 +26,14 @@ class DeviceFilter extends StatelessWidget {
         _buildChip(
           context,
           label: '$newCount New',
-          backgroundColor: Colors.purple.withOpacity(0.1),
+          backgroundColor: Colors.purple.withValues(alpha: 0.1),
           textColor: Colors.purple.shade300, // Slightly lighter for dark mode compatibility, or use adaptive
         ),
         const SizedBox(width: 12),
         _buildChip(
           context,
           label: '$suspiciousCount Suspicious',
-          backgroundColor: Colors.orange.withOpacity(0.2),
+          backgroundColor: Colors.orange.withValues(alpha: 0.2),
           textColor: Colors.orange.shade700,
         ),
       ],

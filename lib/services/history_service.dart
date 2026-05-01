@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../models/history.dart';
 
@@ -53,18 +52,8 @@ class ApiService {
         .timeout(ApiConfig.timeout);
   }
 
-  static Future<http.Response> _post(String path, Map<String, dynamic> body) {
-    return http
-        .post(
-          Uri.parse('${ApiConfig.baseUrl}$path'),
-          headers: ApiConfig.headers,
-          body: jsonEncode(body),
-        )
-        .timeout(ApiConfig.timeout);
-  }
-
   // ── HISTORY ───────────────────────────────────────────────────────────────
-  /// GET /api/history?q=<query>
+  /// GET `/api/history?q=<query>`
   /// Expected JSON: [ { "id", "title", "device", "ip", "time",
   ///                    "date_group", "type": "connection"|"disconnection"|
   ///                    "anomaly"|"update"|"scan" } ]

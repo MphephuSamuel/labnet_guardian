@@ -252,6 +252,84 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
     );
   }
 
+  // ── Top bar ────────────────────────────────────────────────────────────────
+  Widget _topBar(bool isDark, ThemeProvider theme, Color textColor, BuildContext ctx) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      child: Row(
+        children: [
+          Icon(Icons.menu, color: textColor, size: 26),
+          const Spacer(),
+          _circleBtn(
+            isDark ? Icons.wb_sunny_outlined : Icons.nightlight_round_outlined,
+            isDark, textColor, onTap: theme.toggleTheme,
+          ),
+          const SizedBox(width: 10),
+          // Notification bell → jump to Alerts tab via nav
+          Stack(
+            children: [
+              _circleBtn(Icons.notifications_outlined, isDark, textColor,
+                  onTap: () => _jumpToAlerts(ctx)),
+              Positioned(
+                right: 8, top: 8,
+                child: Container(
+                  width: 8, height: 8,
+                  decoration: const BoxDecoration(
+                    color: AppColors.critical, shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 10),
+          // Avatar → Profile & Settings
+          GestureDetector(
+            onTap: () => _openProfile(ctx),
+            child: Container(
+              width: 40, height: 40,
+              decoration: const BoxDecoration(
+                color: AppColors.gradientStart, shape: BoxShape.circle,
+              ),
+              child: const Center(
+                child: Text('A',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    )),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Tells the root MainNavigation to switch to the Alerts tab (index 2)
+  void _jumpToAlerts(BuildContext context) {
+    final nav = context.findAncestorStateOfType<MainLayoutState>();
+    nav?.jumpTo(2);
+  }
+
+  Widget _circleBtn(IconData icon, bool isDark, Color color, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40, height: 40,
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkCard : AppColors.lightCard,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06), blurRadius: 8,
+            ),
+          ],
+        ),
+        child: Icon(icon, color: color, size: 20),
+      ),
+    );
+  }
+
   // ── Search bar ─────────────────────────────────────────────────────────────
   Widget _searchBar(bool isDark, Color subColor, Color cardColor, Color textColor) {
     return Container(
@@ -260,7 +338,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
         color: cardColor,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(isDark ? 0.2 : 0.05), blurRadius: 8),
+          BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05), blurRadius: 8),
         ],
       ),
       child: Row(
@@ -313,12 +391,12 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.critical.withOpacity(0.08),
+          color: AppColors.critical.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.critical.withOpacity(0.25)),
+          border: Border.all(color: AppColors.critical.withValues(alpha: 0.25)),
         ),
         child: Column(children: [
-          Icon(Icons.cloud_off_rounded, color: AppColors.critical.withOpacity(0.7), size: 44),
+          Icon(Icons.cloud_off_rounded, color: AppColors.critical.withValues(alpha: 0.7), size: 44),
           const SizedBox(height: 12),
           Text(_error!, textAlign: TextAlign.center,
               style: TextStyle(color: subColor, fontSize: 13, height: 1.5)),
@@ -342,7 +420,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
       padding: const EdgeInsets.symmetric(vertical: 60),
       child: Center(
         child: Column(children: [
-          Icon(Icons.search_off_rounded, color: subColor.withOpacity(0.4), size: 56),
+          Icon(Icons.search_off_rounded, color: subColor.withValues(alpha: 0.4), size: 56),
           const SizedBox(height: 16),
           Text(_query.isEmpty ? 'No activity recorded yet' : 'No results for "$_query"',
               style: TextStyle(color: subColor, fontSize: 15)),
@@ -361,7 +439,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
     required String query,
   }) {
     final type   = item.type;
-    final iconBg = isDark ? type.color.withOpacity(0.15) : type.color.withOpacity(0.12);
+    final iconBg = isDark ? type.color.withValues(alpha: 0.15) : type.color.withValues(alpha: 0.12);
     final badgeBg = iconBg;
 
     return Container(
@@ -371,7 +449,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
             blurRadius: 10, offset: const Offset(0, 2),
           ),
         ],
@@ -429,7 +507,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
             style: TextStyle(
               color: AppColors.gradientStart,
               fontWeight: FontWeight.w800,
-              backgroundColor: AppColors.gradientStart.withOpacity(0.12),
+              backgroundColor: AppColors.gradientStart.withValues(alpha: 0.12),
             ),
           ),
           TextSpan(text: text.substring(idx + query.length)),

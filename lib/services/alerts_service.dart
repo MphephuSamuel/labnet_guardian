@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../models/alert.dart';
 
@@ -49,16 +48,6 @@ class ApiService {
         .get(
           Uri.parse('${ApiConfig.baseUrl}$path'),
           headers: ApiConfig.headers,
-        )
-        .timeout(ApiConfig.timeout);
-  }
-
-  static Future<http.Response> _post(String path, Map<String, dynamic> body) {
-    return http
-        .post(
-          Uri.parse('${ApiConfig.baseUrl}$path'),
-          headers: ApiConfig.headers,
-          body: jsonEncode(body),
         )
         .timeout(ApiConfig.timeout);
   }

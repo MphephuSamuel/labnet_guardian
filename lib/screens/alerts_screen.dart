@@ -174,6 +174,80 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
     );
   }
 
+  // ── Top bar ────────────────────────────────────────────────────────────────
+  Widget _topBar(bool isDark, ThemeProvider theme, Color textColor, BuildContext ctx) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      child: Row(
+        children: [
+          Icon(Icons.menu, color: textColor, size: 26),
+          const Spacer(),
+          _circleBtn(
+            isDark ? Icons.wb_sunny_outlined : Icons.nightlight_round_outlined,
+            isDark, textColor, onTap: theme.toggleTheme,
+          ),
+          const SizedBox(width: 10),
+          // Notification bell — tapping here does nothing extra since we ARE
+          // already on the Alerts screen; the dot still shows unread count.
+          Stack(
+            children: [
+              _circleBtn(Icons.notifications_outlined, isDark, textColor),
+              if (_criticalCount > 0)
+                Positioned(
+                  right: 8, top: 8,
+                  child: Container(
+                    width: 8, height: 8,
+                    decoration: const BoxDecoration(
+                      color: AppColors.critical, shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 10),
+          // Avatar — navigates to Profile & Settings
+          GestureDetector(
+            onTap: () => _openProfile(ctx),
+            child: Container(
+              width: 40, height: 40,
+              decoration: const BoxDecoration(
+                color: AppColors.gradientStart, shape: BoxShape.circle,
+              ),
+              child: const Center(
+                child: Text('A',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    )),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _circleBtn(IconData icon, bool isDark, Color color, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40, height: 40,
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkCard : AppColors.lightCard,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
+              blurRadius: 8, offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Icon(icon, color: color, size: 20),
+      ),
+    );
+  }
+
   // ── Tabs ───────────────────────────────────────────────────────────────────
   Widget _tabsRow(bool isDark, Color subColor) {
     return Row(
@@ -227,12 +301,12 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 18),
           decoration: BoxDecoration(
-            color: isActive ? color.withOpacity(isDark ? 0.2 : 0.08) : cardColor,
+            color: isActive ? color.withValues(alpha: isDark ? 0.2 : 0.08) : cardColor,
             borderRadius: BorderRadius.circular(16),
-            border: isActive ? Border.all(color: color.withOpacity(0.5), width: 1.5) : null,
+            border: isActive ? Border.all(color: color.withValues(alpha: 0.5), width: 1.5) : null,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
                 blurRadius: 10, offset: const Offset(0, 2),
               ),
             ],
@@ -267,12 +341,12 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.critical.withOpacity(0.08),
+          color: AppColors.critical.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.critical.withOpacity(0.25)),
+          border: Border.all(color: AppColors.critical.withValues(alpha: 0.25)),
         ),
         child: Column(children: [
-          Icon(Icons.cloud_off_rounded, color: AppColors.critical.withOpacity(0.7), size: 44),
+          Icon(Icons.cloud_off_rounded, color: AppColors.critical.withValues(alpha: 0.7), size: 44),
           const SizedBox(height: 12),
           Text(_error!, textAlign: TextAlign.center,
               style: TextStyle(color: subColor, fontSize: 13, height: 1.5)),
@@ -299,7 +373,7 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
       child: Center(
         child: Column(children: [
           Icon(Icons.check_circle_outline_rounded,
-              color: subColor.withOpacity(0.4), size: 56),
+              color: subColor.withValues(alpha: 0.4), size: 56),
           const SizedBox(height: 16),
           Text('No alerts in this category',
               style: TextStyle(color: subColor, fontSize: 15, fontWeight: FontWeight.w500)),
@@ -324,7 +398,7 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
         border: Border(left: BorderSide(color: sev.color, width: 3.5)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
             blurRadius: 10, offset: const Offset(0, 2),
           ),
         ],
@@ -335,7 +409,7 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
           Container(
             width: 44, height: 44,
             decoration: BoxDecoration(
-              color: isDark ? sev.color.withOpacity(0.15) : sev.bgLight,
+              color: isDark ? sev.color.withValues(alpha: 0.15) : sev.bgLight,
               shape: BoxShape.circle,
             ),
             child: Icon(sev.icon, color: sev.color, size: 22),
