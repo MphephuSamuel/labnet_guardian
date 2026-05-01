@@ -7,16 +7,27 @@ import '../screens/devices_screen.dart';
 import '../screens/alerts_screen.dart';
 import '../screens/history_screen.dart';
 import '../screens/ai_assistant_screen.dart';
+import '../screens/biometric_screen.dart';
+import '../screens/authentication_screen.dart';
+import '../screens/login_screen.dart';
 
 class MainLayout extends StatefulWidget {
-  const MainLayout({super.key});
+  final int initialIndex;
+
+  const MainLayout({super.key, this.initialIndex = 1});
 
   @override
   State<MainLayout> createState() => MainLayoutState();
 }
 
 class MainLayoutState extends State<MainLayout> {
-  int _currentIndex = 1; // Default to Devices screen based on screenshot
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+  }
 
   final List<Widget> _screens = [
     const DashboardScreen(),

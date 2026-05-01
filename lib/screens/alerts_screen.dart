@@ -31,15 +31,62 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
 
   Future<void> _loadAlerts() async {
     setState(() { _isLoading = true; _error = null; });
-    final result = await ApiService.fetchAlerts();
+    
+    // Mockup data for demonstration
+    await Future.delayed(const Duration(milliseconds: 800));
     if (!mounted) return;
+    
+    final mockAlerts = [
+      AlertItem(
+        id: '1',
+        title: 'Suspicious Login Attempt',
+        description: 'Multiple failed login attempts detected from unknown device',
+        device: 'LAB-PC-001',
+        ip: '192.168.1.45',
+        time: '2 minutes ago',
+        severity: AlertSeverity.critical,
+      ),
+      AlertItem(
+        id: '2',
+        title: 'Unusual Network Traffic',
+        description: 'Abnormal data transfer patterns detected on device',
+        device: 'IOT-SENSOR-01',
+        ip: '192.168.1.112',
+        time: '15 minutes ago',
+        severity: AlertSeverity.warning,
+      ),
+      AlertItem(
+        id: '3',
+        title: 'New Device Connected',
+        description: 'Previously unseen device joined the network',
+        device: 'PHONE-CS-023',
+        ip: '192.168.1.92',
+        time: '1 hour ago',
+        severity: AlertSeverity.info,
+      ),
+      AlertItem(
+        id: '4',
+        title: 'Firewall Rule Triggered',
+        description: 'Blocked connection attempt to restricted port',
+        device: 'TABLET-ENG-015',
+        ip: '192.168.1.78',
+        time: '2 hours ago',
+        severity: AlertSeverity.warning,
+      ),
+      AlertItem(
+        id: '5',
+        title: 'System Update Available',
+        description: 'Security patches ready for installation',
+        device: 'LAB-PC-002',
+        ip: '192.168.1.46',
+        time: '3 hours ago',
+        severity: AlertSeverity.info,
+      ),
+    ];
+    
     setState(() {
       _isLoading = false;
-      if (result.hasError) {
-        _error = result.error;
-      } else {
-        _alerts = result.data ?? [];
-      }
+      _alerts = mockAlerts;
     });
   }
 
@@ -68,10 +115,10 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
   Widget build(BuildContext context) {
     final theme = Provider.of<ThemeProvider>(context);
     final isDark = theme.isDarkMode;
-    final bgColor   = isDark ? AppColors.darkBg      : AppColors.lightBg;
-    final cardColor = isDark ? AppColors.darkCard     : AppColors.lightCard;
-    final textColor = isDark ? AppColors.textDarkPrimary     : AppColors.textLight;
-    final subColor  = isDark ? AppColors.textDarkSecondary  : AppColors.textLightSecondary;
+    final bgColor = AppColors.getBgColor(isDark);
+    final cardColor = AppColors.getCardColor(isDark);
+    final textColor = AppColors.getTextPrimary(isDark);
+    final subColor = AppColors.getTextSecondary(isDark);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -79,7 +126,6 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _topBar(isDark, theme, textColor, context),
             Expanded(
               child: RefreshIndicator(
                 color: AppColors.gradientStart,
@@ -192,7 +238,7 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
               blurRadius: 8, offset: const Offset(0, 2),
             ),
           ],
@@ -255,12 +301,12 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 18),
           decoration: BoxDecoration(
-            color: isActive ? color.withOpacity(isDark ? 0.2 : 0.08) : cardColor,
+            color: isActive ? color.withValues(alpha: isDark ? 0.2 : 0.08) : cardColor,
             borderRadius: BorderRadius.circular(16),
-            border: isActive ? Border.all(color: color.withOpacity(0.5), width: 1.5) : null,
+            border: isActive ? Border.all(color: color.withValues(alpha: 0.5), width: 1.5) : null,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
                 blurRadius: 10, offset: const Offset(0, 2),
               ),
             ],
@@ -295,12 +341,12 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.critical.withOpacity(0.08),
+          color: AppColors.critical.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.critical.withOpacity(0.25)),
+          border: Border.all(color: AppColors.critical.withValues(alpha: 0.25)),
         ),
         child: Column(children: [
-          Icon(Icons.cloud_off_rounded, color: AppColors.critical.withOpacity(0.7), size: 44),
+          Icon(Icons.cloud_off_rounded, color: AppColors.critical.withValues(alpha: 0.7), size: 44),
           const SizedBox(height: 12),
           Text(_error!, textAlign: TextAlign.center,
               style: TextStyle(color: subColor, fontSize: 13, height: 1.5)),
@@ -327,7 +373,7 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
       child: Center(
         child: Column(children: [
           Icon(Icons.check_circle_outline_rounded,
-              color: subColor.withOpacity(0.4), size: 56),
+              color: subColor.withValues(alpha: 0.4), size: 56),
           const SizedBox(height: 16),
           Text('No alerts in this category',
               style: TextStyle(color: subColor, fontSize: 15, fontWeight: FontWeight.w500)),
@@ -352,7 +398,7 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
         border: Border(left: BorderSide(color: sev.color, width: 3.5)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
             blurRadius: 10, offset: const Offset(0, 2),
           ),
         ],
@@ -363,7 +409,7 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
           Container(
             width: 44, height: 44,
             decoration: BoxDecoration(
-              color: isDark ? sev.color.withOpacity(0.15) : sev.bgLight,
+              color: isDark ? sev.color.withValues(alpha: 0.15) : sev.bgLight,
               shape: BoxShape.circle,
             ),
             child: Icon(sev.icon, color: sev.color, size: 22),

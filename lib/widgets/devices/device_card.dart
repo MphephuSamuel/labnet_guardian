@@ -22,15 +22,15 @@ class DeviceCard extends StatelessWidget {
     }
 
     Color getIconBackgroundColor(DeviceType type, bool isSuspicious) {
-      if (isSuspicious) return Colors.orange.withOpacity(0.2);
+      if (isSuspicious) return Colors.orange.withValues(alpha: 0.2);
       switch (type) {
         case DeviceType.laptop:
         case DeviceType.phone:
-          return Colors.purple.withOpacity(0.1);
+          return Colors.purple.withValues(alpha: 0.1);
         case DeviceType.tablet:
-          return Colors.orange.withOpacity(0.1);
+          return Colors.orange.withValues(alpha: 0.1);
         case DeviceType.other:
-          return Colors.blue.withOpacity(0.1);
+          return Colors.blue.withValues(alpha: 0.1);
       }
     }
 
@@ -55,7 +55,7 @@ class DeviceCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -120,7 +120,7 @@ class DeviceCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.purple.withOpacity(0.8),
+                          color: Colors.purple.withValues(alpha: 0.8),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Text(
@@ -164,8 +164,8 @@ class DeviceCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: device.status == DeviceStatus.active
-                            ? Colors.green.withOpacity(0.15)
-                            : Colors.grey.withOpacity(0.15),
+                            ? Colors.green.withValues(alpha: 0.15)
+                            : Colors.grey.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(

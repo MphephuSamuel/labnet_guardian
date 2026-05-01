@@ -7,7 +7,6 @@ import '../services/history_service.dart';
 import '../utils/colors.dart';
 import 'profile_screen.dart';
 import '../layout/main_layout.dart';
-import '../main.dart';
 
 class ActivityHistoryScreen extends StatefulWidget {
   const ActivityHistoryScreen({super.key});
@@ -53,15 +52,107 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
 
   Future<void> _loadHistory({String query = ''}) async {
     setState(() { _isLoading = true; _error = null; });
-    final result = await ApiService.fetchHistory(query: query);
+    
+    // Mockup data for demonstration
+    await Future.delayed(const Duration(milliseconds: 800));
     if (!mounted) return;
+    
+    final mockHistory = [
+      HistoryItem(
+        id: '1',
+        title: 'Device connected to network',
+        device: 'LAB-PC-001',
+        ip: '192.168.1.45',
+        time: '09:45 AM',
+        dateGroup: 'Today',
+        type: HistoryType.connection,
+      ),
+      HistoryItem(
+        id: '2',
+        title: 'Security scan completed',
+        device: 'SYSTEM',
+        ip: '192.168.1.1',
+        time: '09:30 AM',
+        dateGroup: 'Today',
+        type: HistoryType.scan,
+      ),
+      HistoryItem(
+        id: '3',
+        title: 'Anomaly detected in traffic patterns',
+        device: 'IOT-SENSOR-01',
+        ip: '192.168.1.112',
+        time: '08:15 AM',
+        dateGroup: 'Today',
+        type: HistoryType.anomaly,
+      ),
+      HistoryItem(
+        id: '4',
+        title: 'Device disconnected from network',
+        device: 'PHONE-CS-023',
+        ip: '192.168.1.92',
+        time: '07:55 AM',
+        dateGroup: 'Today',
+        type: HistoryType.disconnection,
+      ),
+      HistoryItem(
+        id: '5',
+        title: 'System update installed',
+        device: 'LAB-PC-002',
+        ip: '192.168.1.46',
+        time: '06:30 AM',
+        dateGroup: 'Today',
+        type: HistoryType.update,
+      ),
+      HistoryItem(
+        id: '6',
+        title: 'New device joined network',
+        device: 'TABLET-ENG-015',
+        ip: '192.168.1.78',
+        time: 'Yesterday',
+        dateGroup: 'Yesterday',
+        type: HistoryType.connection,
+      ),
+      HistoryItem(
+        id: '7',
+        title: 'Firewall rules updated',
+        device: 'SYSTEM',
+        ip: '192.168.1.1',
+        time: 'Yesterday',
+        dateGroup: 'Yesterday',
+        type: HistoryType.update,
+      ),
+      HistoryItem(
+        id: '8',
+        title: 'Network scan initiated',
+        device: 'SYSTEM',
+        ip: '192.168.1.1',
+        time: 'Yesterday',
+        dateGroup: 'Yesterday',
+        type: HistoryType.scan,
+      ),
+      HistoryItem(
+        id: '9',
+        title: 'Device left network',
+        device: 'PHONE-ENG-04',
+        ip: '192.168.1.95',
+        time: '2 days ago',
+        dateGroup: '2 days ago',
+        type: HistoryType.disconnection,
+      ),
+      HistoryItem(
+        id: '10',
+        title: 'Suspicious activity blocked',
+        device: 'FIREWALL',
+        ip: '192.168.1.1',
+        time: '2 days ago',
+        dateGroup: '2 days ago',
+        type: HistoryType.anomaly,
+      ),
+    ];
+    
     setState(() {
       _isLoading = false;
-      if (result.hasError) {
-        _error = result.error;
-      } else {
-        _items = result.data ?? [];
-      }
+      _items = mockHistory;
     });
   }
 
@@ -99,10 +190,10 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
   Widget build(BuildContext context) {
     final theme   = Provider.of<ThemeProvider>(context);
     final isDark  = theme.isDarkMode;
-    final bgColor   = isDark ? AppColors.darkBg     : AppColors.lightBg;
-    final cardColor = isDark ? AppColors.darkCard    : AppColors.lightCard;
-    final textColor = isDark ? AppColors.textDarkPrimary    : AppColors.textLight;
-    final subColor  = isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary;
+    final bgColor = AppColors.getBgColor(isDark);
+    final cardColor = AppColors.getCardColor(isDark);
+    final textColor = AppColors.getTextPrimary(isDark);
+    final subColor = AppColors.getTextSecondary(isDark);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -110,7 +201,6 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _topBar(isDark, theme, textColor, context),
             Expanded(
               child: RefreshIndicator(
                 color: AppColors.gradientStart,
@@ -231,7 +321,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.3 : 0.06), blurRadius: 8,
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06), blurRadius: 8,
             ),
           ],
         ),
@@ -248,7 +338,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
         color: cardColor,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(isDark ? 0.2 : 0.05), blurRadius: 8),
+          BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05), blurRadius: 8),
         ],
       ),
       child: Row(
@@ -301,12 +391,12 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.critical.withOpacity(0.08),
+          color: AppColors.critical.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.critical.withOpacity(0.25)),
+          border: Border.all(color: AppColors.critical.withValues(alpha: 0.25)),
         ),
         child: Column(children: [
-          Icon(Icons.cloud_off_rounded, color: AppColors.critical.withOpacity(0.7), size: 44),
+          Icon(Icons.cloud_off_rounded, color: AppColors.critical.withValues(alpha: 0.7), size: 44),
           const SizedBox(height: 12),
           Text(_error!, textAlign: TextAlign.center,
               style: TextStyle(color: subColor, fontSize: 13, height: 1.5)),
@@ -330,7 +420,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
       padding: const EdgeInsets.symmetric(vertical: 60),
       child: Center(
         child: Column(children: [
-          Icon(Icons.search_off_rounded, color: subColor.withOpacity(0.4), size: 56),
+          Icon(Icons.search_off_rounded, color: subColor.withValues(alpha: 0.4), size: 56),
           const SizedBox(height: 16),
           Text(_query.isEmpty ? 'No activity recorded yet' : 'No results for "$_query"',
               style: TextStyle(color: subColor, fontSize: 15)),
@@ -349,7 +439,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
     required String query,
   }) {
     final type   = item.type;
-    final iconBg = isDark ? type.color.withOpacity(0.15) : type.color.withOpacity(0.12);
+    final iconBg = isDark ? type.color.withValues(alpha: 0.15) : type.color.withValues(alpha: 0.12);
     final badgeBg = iconBg;
 
     return Container(
@@ -359,7 +449,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
             blurRadius: 10, offset: const Offset(0, 2),
           ),
         ],
@@ -417,7 +507,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
             style: TextStyle(
               color: AppColors.gradientStart,
               fontWeight: FontWeight.w800,
-              backgroundColor: AppColors.gradientStart.withOpacity(0.12),
+              backgroundColor: AppColors.gradientStart.withValues(alpha: 0.12),
             ),
           ),
           TextSpan(text: text.substring(idx + query.length)),
