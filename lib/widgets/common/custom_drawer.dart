@@ -5,6 +5,7 @@ import '../../screens/advanced_search_screen.dart';
 import '../../screens/profile_screen.dart';
 import '../../screens/settings_screen.dart';
 import '../../screens/login_screen.dart';
+import '../../screens/analytics_screen.dart';
 
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({super.key});
@@ -144,6 +145,15 @@ class CustomDrawer extends StatelessWidget {
                     iconBgColor: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
                     iconColor: const Color(0xFF8B5CF6),
                     textColor: textColor,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AnalyticsScreen(),
+                        ),
+                      );
+                    },
                   ),
                   _buildMenuItem(
                     icon: Icons.settings_outlined,
