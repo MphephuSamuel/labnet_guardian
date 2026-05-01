@@ -9,7 +9,7 @@ class AppColors {
   static const Color iconPurple = Color(0xFF8B5CF6);
   static const Color iconPink = Color(0xFFEC4899);
   static const Color iconBlue = Color(0xFF3B82F6);
- 
+
   // Alert colors
   static const critical = Color(0xFFEF4444);
   static const criticalBg = Color(0xFFFFEBEB);
@@ -17,6 +17,7 @@ class AppColors {
   static const warningBg = Color(0xFFFFF8EB);
   static const info = Color(0xFF3B82F6);
   static const connection = Color(0xFF10B981);
+  static const primary = Color(0xFF8B5CF6);
 
   // Dark Mode
   static const Color darkBg = Color(0xFF0F0F1A);
@@ -46,6 +47,5 @@ class AppColors {
       isDark ? textLight : textDarkPrimary;
   static Color getTextSecondary(bool isDark) =>
       isDark ? textLightSecondary : textDarkSecondary;
-  static Color getBorderColor(bool isDark) =>
-      isDark ? darkBorder : lightBorder;
+  static Color getBorderColor(bool isDark) => isDark ? darkBorder : lightBorder;
 }
