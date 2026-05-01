@@ -11,15 +11,15 @@ This repository contains the **Flutter frontend** of the system.
 
 ## 🚀 Features
 
-- 🔐 User Authentication (Login & Biometrics – planned)
-- 📊 Dashboard with real-time network statistics
-- 💻 Connected Devices Monitoring (IP, MAC, usage)
-- 🚨 Security Alerts & Notifications
-- 🕓 Activity History Tracking
-- 📈 Analytics & Reports
-- 🔎 Advanced Search
-- 🤖 AI Assistant (planned)
-- ⚙️ System Settings & Configuration
+- 🔐 User Authentication (Login UI scaffolded, Biometrics planned)
+- 📊 Dashboard with real-time network statistics (UI scaffolded)
+- 💻 Connected Devices Monitoring (IP, MAC, usage) (UI implemented)
+- 🚨 Security Alerts & Notifications (UI scaffolded)
+- 🕓 Activity History Tracking (UI scaffolded)
+- 📈 Analytics & Reports (Planned)
+- 🔎 Advanced Search (UI implemented)
+- 🤖 AI Assistant (UI implemented)
+- ⚙️ System Settings & Configuration (Planned)
 
 ---
 
@@ -38,17 +38,21 @@ This repository contains the **Flutter frontend** of the system.
 lib/
 ├── main.dart
 ├── screens/ # Full app pages (Dashboard, Devices, Alerts, etc.)
+│ ├── authentication_screen.dart
 │ ├── login_screen.dart
 │ ├── dashboard_screen.dart
 │ ├── devices_screen.dart
 │ ├── alerts_screen.dart
 │ ├── history_screen.dart
-│ ├── analytics_screen.dart
-│ ├── settings_screen.dart
-│ ├── profile_screen.dart
-│ ├── search_screen.dart
-│ ├── support_screen.dart
-│ └── ai_assistant_screen.dart
+│ ├── advanced_search_screen.dart
+│ ├── ai_assistant_screen.dart
+│ ├── analytics_screen.dart # (planned)
+│ ├── settings_screen.dart # (planned)
+│ ├── profile_screen.dart # (planned)
+│ └── support_screen.dart # (planned)
+│
+├── layout/ # App layout wrappers
+│ └── main_layout.dart
 │
 ├── widgets/ # Reusable UI components
 │ ├── dashboard/ # Dashboard-specific widgets
@@ -220,9 +224,12 @@ Screens will be added here (Dashboard, Devices, Alerts, etc.)
 
 ## 🔧 Current Status
 
-- UI development in progress
-- Using mock data (no backend yet)
-- Backend & Firebase integration coming next
+- ✅ App structure and global layout (Custom App Bar, Drawer, Bottom Nav) implemented
+- ✅ Login and Authentication flow scaffolded (Standalone screens)
+- ✅ Connected Devices, Advanced Search, and AI Assistant UI completed
+- ⏳ Further UI development in progress (Dashboard, Alerts, History)
+- ⏳ Using mock data (no backend yet)
+- ⏳ Backend & Firebase integration coming next
 
 ---
 
