@@ -195,9 +195,149 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
 
               const SizedBox(height: 20),
+
+              // ── Lab Status Section ──
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Lab Status',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: textPrimary)),
+                  Text('View All',
+                      style: TextStyle(
+                          fontSize: 14,
+                          color: const Color(0xFF8B5CF6),
+                          fontWeight: FontWeight.w600)),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // ── Lab Cards ──
+              _buildLabCard(
+                  isDarkMode: isDarkMode,
+                  cardBg: cardBg,
+                  textPrimary: textPrimary,
+                  textSecondary: textSecondary,
+                  labName: 'Engineering Lab',
+                  devicesActive: '42/45',
+                  percentage: 85),
+              const SizedBox(height: 12),
+              _buildLabCard(
+                  isDarkMode: isDarkMode,
+                  cardBg: cardBg,
+                  textPrimary: textPrimary,
+                  textSecondary: textSecondary,
+                  labName: 'Computer Science Lab',
+                  devicesActive: '36/38',
+                  percentage: 72),
+              const SizedBox(height: 12),
+              _buildLabCard(
+                  isDarkMode: isDarkMode,
+                  cardBg: cardBg,
+                  textPrimary: textPrimary,
+                  textSecondary: textSecondary,
+                  labName: 'Physics Lab',
+                  devicesActive: '25/28',
+                  percentage: 58),
+              const SizedBox(height: 12),
+              _buildLabCard(
+                  isDarkMode: isDarkMode,
+                  cardBg: cardBg,
+                  textPrimary: textPrimary,
+                  textSecondary: textSecondary,
+                  labName: 'Chemistry Lab',
+                  devicesActive: '30/32',
+                  percentage: 65),
+
+              const SizedBox(height: 40),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildLabCard({
+    required bool isDarkMode,
+    required Color cardBg,
+    required Color textPrimary,
+    required Color textSecondary,
+    required String labName,
+    required String devicesActive,
+    required int percentage,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDarkMode ? 0.3 : 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.dns_outlined,
+                    color: Color(0xFF8B5CF6), size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(labName,
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: textPrimary)),
+                    const SizedBox(height: 4),
+                    Text('$devicesActive devices active',
+                        style: TextStyle(
+                            fontSize: 12, color: textSecondary)),
+                  ],
+                ),
+              ),
+              Text('$percentage%',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: textPrimary)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: percentage / 100,
+              minHeight: 6,
+              backgroundColor: textSecondary.withValues(alpha: 0.1),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                percentage >= 80
+                    ? const Color(0xFFFF6B35)
+                    : percentage >= 60
+                        ? const Color(0xFF8B5CF6)
+                        : const Color(0xFF3B82F6),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
