@@ -7,7 +7,6 @@ import '../services/history_service.dart';
 import '../utils/colors.dart';
 import 'profile_screen.dart';
 import '../layout/main_layout.dart';
-import '../main.dart';
 
 class ActivityHistoryScreen extends StatefulWidget {
   const ActivityHistoryScreen({super.key});
@@ -231,7 +230,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.3 : 0.06), blurRadius: 8,
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06), blurRadius: 8,
             ),
           ],
         ),
@@ -248,7 +247,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
         color: cardColor,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(isDark ? 0.2 : 0.05), blurRadius: 8),
+          BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05), blurRadius: 8),
         ],
       ),
       child: Row(
@@ -301,12 +300,12 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.critical.withOpacity(0.08),
+          color: AppColors.critical.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.critical.withOpacity(0.25)),
+          border: Border.all(color: AppColors.critical.withValues(alpha: 0.25)),
         ),
         child: Column(children: [
-          Icon(Icons.cloud_off_rounded, color: AppColors.critical.withOpacity(0.7), size: 44),
+          Icon(Icons.cloud_off_rounded, color: AppColors.critical.withValues(alpha: 0.7), size: 44),
           const SizedBox(height: 12),
           Text(_error!, textAlign: TextAlign.center,
               style: TextStyle(color: subColor, fontSize: 13, height: 1.5)),
@@ -330,7 +329,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
       padding: const EdgeInsets.symmetric(vertical: 60),
       child: Center(
         child: Column(children: [
-          Icon(Icons.search_off_rounded, color: subColor.withOpacity(0.4), size: 56),
+          Icon(Icons.search_off_rounded, color: subColor.withValues(alpha: 0.4), size: 56),
           const SizedBox(height: 16),
           Text(_query.isEmpty ? 'No activity recorded yet' : 'No results for "$_query"',
               style: TextStyle(color: subColor, fontSize: 15)),
@@ -349,7 +348,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
     required String query,
   }) {
     final type   = item.type;
-    final iconBg = isDark ? type.color.withOpacity(0.15) : type.color.withOpacity(0.12);
+    final iconBg = isDark ? type.color.withValues(alpha: 0.15) : type.color.withValues(alpha: 0.12);
     final badgeBg = iconBg;
 
     return Container(
@@ -359,7 +358,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
             blurRadius: 10, offset: const Offset(0, 2),
           ),
         ],
@@ -417,7 +416,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
             style: TextStyle(
               color: AppColors.gradientStart,
               fontWeight: FontWeight.w800,
-              backgroundColor: AppColors.gradientStart.withOpacity(0.12),
+              backgroundColor: AppColors.gradientStart.withValues(alpha: 0.12),
             ),
           ),
           TextSpan(text: text.substring(idx + query.length)),
