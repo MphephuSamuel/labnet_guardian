@@ -52,15 +52,107 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
 
   Future<void> _loadHistory({String query = ''}) async {
     setState(() { _isLoading = true; _error = null; });
-    final result = await ApiService.fetchHistory(query: query);
+    
+    // Mockup data for demonstration
+    await Future.delayed(const Duration(milliseconds: 800));
     if (!mounted) return;
+    
+    final mockHistory = [
+      HistoryItem(
+        id: '1',
+        title: 'Device connected to network',
+        device: 'LAB-PC-001',
+        ip: '192.168.1.45',
+        time: '09:45 AM',
+        dateGroup: 'Today',
+        type: HistoryType.connection,
+      ),
+      HistoryItem(
+        id: '2',
+        title: 'Security scan completed',
+        device: 'SYSTEM',
+        ip: '192.168.1.1',
+        time: '09:30 AM',
+        dateGroup: 'Today',
+        type: HistoryType.scan,
+      ),
+      HistoryItem(
+        id: '3',
+        title: 'Anomaly detected in traffic patterns',
+        device: 'IOT-SENSOR-01',
+        ip: '192.168.1.112',
+        time: '08:15 AM',
+        dateGroup: 'Today',
+        type: HistoryType.anomaly,
+      ),
+      HistoryItem(
+        id: '4',
+        title: 'Device disconnected from network',
+        device: 'PHONE-CS-023',
+        ip: '192.168.1.92',
+        time: '07:55 AM',
+        dateGroup: 'Today',
+        type: HistoryType.disconnection,
+      ),
+      HistoryItem(
+        id: '5',
+        title: 'System update installed',
+        device: 'LAB-PC-002',
+        ip: '192.168.1.46',
+        time: '06:30 AM',
+        dateGroup: 'Today',
+        type: HistoryType.update,
+      ),
+      HistoryItem(
+        id: '6',
+        title: 'New device joined network',
+        device: 'TABLET-ENG-015',
+        ip: '192.168.1.78',
+        time: 'Yesterday',
+        dateGroup: 'Yesterday',
+        type: HistoryType.connection,
+      ),
+      HistoryItem(
+        id: '7',
+        title: 'Firewall rules updated',
+        device: 'SYSTEM',
+        ip: '192.168.1.1',
+        time: 'Yesterday',
+        dateGroup: 'Yesterday',
+        type: HistoryType.update,
+      ),
+      HistoryItem(
+        id: '8',
+        title: 'Network scan initiated',
+        device: 'SYSTEM',
+        ip: '192.168.1.1',
+        time: 'Yesterday',
+        dateGroup: 'Yesterday',
+        type: HistoryType.scan,
+      ),
+      HistoryItem(
+        id: '9',
+        title: 'Device left network',
+        device: 'PHONE-ENG-04',
+        ip: '192.168.1.95',
+        time: '2 days ago',
+        dateGroup: '2 days ago',
+        type: HistoryType.disconnection,
+      ),
+      HistoryItem(
+        id: '10',
+        title: 'Suspicious activity blocked',
+        device: 'FIREWALL',
+        ip: '192.168.1.1',
+        time: '2 days ago',
+        dateGroup: '2 days ago',
+        type: HistoryType.anomaly,
+      ),
+    ];
+    
     setState(() {
       _isLoading = false;
-      if (result.hasError) {
-        _error = result.error;
-      } else {
-        _items = result.data ?? [];
-      }
+      _items = mockHistory;
     });
   }
 
@@ -98,10 +190,10 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
   Widget build(BuildContext context) {
     final theme   = Provider.of<ThemeProvider>(context);
     final isDark  = theme.isDarkMode;
-    final bgColor   = isDark ? AppColors.darkBg     : AppColors.lightBg;
-    final cardColor = isDark ? AppColors.darkCard    : AppColors.lightCard;
-    final textColor = isDark ? AppColors.textDarkPrimary    : AppColors.textLight;
-    final subColor  = isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary;
+    final bgColor = AppColors.getBgColor(isDark);
+    final cardColor = AppColors.getCardColor(isDark);
+    final textColor = AppColors.getTextPrimary(isDark);
+    final subColor = AppColors.getTextSecondary(isDark);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -109,7 +201,6 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _topBar(isDark, theme, textColor, context),
             Expanded(
               child: RefreshIndicator(
                 color: AppColors.gradientStart,

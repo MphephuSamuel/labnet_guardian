@@ -31,15 +31,62 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
 
   Future<void> _loadAlerts() async {
     setState(() { _isLoading = true; _error = null; });
-    final result = await ApiService.fetchAlerts();
+    
+    // Mockup data for demonstration
+    await Future.delayed(const Duration(milliseconds: 800));
     if (!mounted) return;
+    
+    final mockAlerts = [
+      AlertItem(
+        id: '1',
+        title: 'Suspicious Login Attempt',
+        description: 'Multiple failed login attempts detected from unknown device',
+        device: 'LAB-PC-001',
+        ip: '192.168.1.45',
+        time: '2 minutes ago',
+        severity: AlertSeverity.critical,
+      ),
+      AlertItem(
+        id: '2',
+        title: 'Unusual Network Traffic',
+        description: 'Abnormal data transfer patterns detected on device',
+        device: 'IOT-SENSOR-01',
+        ip: '192.168.1.112',
+        time: '15 minutes ago',
+        severity: AlertSeverity.warning,
+      ),
+      AlertItem(
+        id: '3',
+        title: 'New Device Connected',
+        description: 'Previously unseen device joined the network',
+        device: 'PHONE-CS-023',
+        ip: '192.168.1.92',
+        time: '1 hour ago',
+        severity: AlertSeverity.info,
+      ),
+      AlertItem(
+        id: '4',
+        title: 'Firewall Rule Triggered',
+        description: 'Blocked connection attempt to restricted port',
+        device: 'TABLET-ENG-015',
+        ip: '192.168.1.78',
+        time: '2 hours ago',
+        severity: AlertSeverity.warning,
+      ),
+      AlertItem(
+        id: '5',
+        title: 'System Update Available',
+        description: 'Security patches ready for installation',
+        device: 'LAB-PC-002',
+        ip: '192.168.1.46',
+        time: '3 hours ago',
+        severity: AlertSeverity.info,
+      ),
+    ];
+    
     setState(() {
       _isLoading = false;
-      if (result.hasError) {
-        _error = result.error;
-      } else {
-        _alerts = result.data ?? [];
-      }
+      _alerts = mockAlerts;
     });
   }
 
@@ -68,10 +115,10 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
   Widget build(BuildContext context) {
     final theme = Provider.of<ThemeProvider>(context);
     final isDark = theme.isDarkMode;
-    final bgColor   = isDark ? AppColors.darkBg      : AppColors.lightBg;
-    final cardColor = isDark ? AppColors.darkCard     : AppColors.lightCard;
-    final textColor = isDark ? AppColors.textDarkPrimary     : AppColors.textLight;
-    final subColor  = isDark ? AppColors.textDarkSecondary  : AppColors.textLightSecondary;
+    final bgColor = AppColors.getBgColor(isDark);
+    final cardColor = AppColors.getCardColor(isDark);
+    final textColor = AppColors.getTextPrimary(isDark);
+    final subColor = AppColors.getTextSecondary(isDark);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -79,7 +126,6 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _topBar(isDark, theme, textColor, context),
             Expanded(
               child: RefreshIndicator(
                 color: AppColors.gradientStart,
