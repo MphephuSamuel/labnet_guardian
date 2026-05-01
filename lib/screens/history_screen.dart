@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/app_theme.dart';
+//import '../providers/app_theme.dart';
 import '../providers/theme_provider.dart';
 import '../models/history.dart';
-import '../services/api_service.dart';
-import 'profile_settings_screen.dart';
+import '../services/history_service.dart';
+import '../utils/colors.dart';
+import 'profile_screen.dart';
+import '../layout/main_layout.dart';
 import '../main.dart';
 
 class ActivityHistoryScreen extends StatefulWidget {
@@ -83,7 +85,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
 
   void _openProfile(BuildContext context) {
     Navigator.push(context,
-        MaterialPageRoute(builder: (_) => const ProfileSettingsScreen()));
+        MaterialPageRoute(builder: (_) => const ProfileScreen()));
   }
 
   @override
@@ -96,11 +98,11 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final theme   = Provider.of<ThemeProvider>(context);
-    final isDark  = theme.isDark;
+    final isDark  = theme.isDarkMode;
     final bgColor   = isDark ? AppColors.darkBg     : AppColors.lightBg;
-    final cardColor = isDark ? AppColors.darkCard    : AppColors.lightSurface;
-    final textColor = isDark ? AppColors.darkText    : AppColors.lightText;
-    final subColor  = isDark ? AppColors.darkSubtext : AppColors.lightSubtext;
+    final cardColor = isDark ? AppColors.darkCard    : AppColors.lightCard;
+    final textColor = isDark ? AppColors.textDarkPrimary    : AppColors.textLight;
+    final subColor  = isDark ? AppColors.textDarkSecondary : AppColors.textLightSecondary;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -111,7 +113,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
             _topBar(isDark, theme, textColor, context),
             Expanded(
               child: RefreshIndicator(
-                color: AppColors.primary,
+                color: AppColors.gradientStart,
                 onRefresh: () => _loadHistory(query: _query),
                 child: ListView(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -170,7 +172,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
           const Spacer(),
           _circleBtn(
             isDark ? Icons.wb_sunny_outlined : Icons.nightlight_round_outlined,
-            isDark, textColor, onTap: theme.toggle,
+            isDark, textColor, onTap: theme.toggleTheme,
           ),
           const SizedBox(width: 10),
           // Notification bell → jump to Alerts tab via nav
@@ -196,7 +198,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
             child: Container(
               width: 40, height: 40,
               decoration: const BoxDecoration(
-                color: AppColors.primary, shape: BoxShape.circle,
+                color: AppColors.gradientStart, shape: BoxShape.circle,
               ),
               child: const Center(
                 child: Text('A',
@@ -215,7 +217,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
 
   /// Tells the root MainNavigation to switch to the Alerts tab (index 2)
   void _jumpToAlerts(BuildContext context) {
-    final nav = context.findAncestorStateOfType<MainNavigationState>();
+    final nav = context.findAncestorStateOfType<MainLayoutState>();
     nav?.jumpTo(2);
   }
 
@@ -225,7 +227,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
       child: Container(
         width: 40, height: 40,
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkCard : AppColors.lightSurface,
+          color: isDark ? AppColors.darkCard : AppColors.lightCard,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
@@ -285,7 +287,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
       padding: const EdgeInsets.symmetric(vertical: 60),
       child: Center(
         child: Column(children: [
-          CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2.5),
+          CircularProgressIndicator(color: AppColors.gradientStart, strokeWidth: 2.5),
           const SizedBox(height: 16),
           Text('Loading history…', style: TextStyle(color: subColor, fontSize: 14)),
         ]),
@@ -313,7 +315,7 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
             onTap: () => _loadHistory(query: _query),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(20)),
+              decoration: BoxDecoration(color: AppColors.gradientStart, borderRadius: BorderRadius.circular(20)),
               child: const Text('Retry',
                   style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
             ),
@@ -413,9 +415,9 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
           TextSpan(
             text: text.substring(idx, idx + query.length),
             style: TextStyle(
-              color: AppColors.primary,
+              color: AppColors.gradientStart,
               fontWeight: FontWeight.w800,
-              backgroundColor: AppColors.primary.withOpacity(0.12),
+              backgroundColor: AppColors.gradientStart.withOpacity(0.12),
             ),
           ),
           TextSpan(text: text.substring(idx + query.length)),

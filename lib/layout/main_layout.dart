@@ -12,20 +12,26 @@ class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
 
   @override
-  State<MainLayout> createState() => _MainLayoutState();
+  State<MainLayout> createState() => MainLayoutState();
 }
 
-class _MainLayoutState extends State<MainLayout> {
+class MainLayoutState extends State<MainLayout> {
   int _currentIndex = 1; // Default to Devices screen based on screenshot
 
   final List<Widget> _screens = [
     const DashboardScreen(),
     const DevicesScreen(),
-    const AlertsScreen(),
-    const HistoryScreen(),
+    const SecurityAlertsScreen(),
+    const ActivityHistoryScreen(),
     const AiAssistantScreen(),
   ];
 
+  void jumpTo(int index) { // make sure this method exists
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+  
   void _onTabTapped(int index) {
     setState(() {
       _currentIndex = index;
