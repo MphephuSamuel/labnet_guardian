@@ -7,9 +7,7 @@ import '../screens/devices_screen.dart';
 import '../screens/alerts_screen.dart';
 import '../screens/history_screen.dart';
 import '../screens/ai_assistant_screen.dart';
-import '../screens/biometric_screen.dart';
-import '../screens/authentication_screen.dart';
-import '../screens/login_screen.dart';
+
 
 class MainLayout extends StatefulWidget {
   final int initialIndex;

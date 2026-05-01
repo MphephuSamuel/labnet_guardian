@@ -132,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextField(
                       controller: _usernameController,
                       keyboardType: TextInputType.emailAddress,
-                      style: const TextStyle(fontSize: 14),
+                      style: const TextStyle(fontSize: 14, color: Colors.black),
                       decoration: InputDecoration(
                         hintText: 'Username or Email',
                         hintStyle: const TextStyle(color: Color(0xFFBDBDD8)),
@@ -167,7 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
-                      style: const TextStyle(fontSize: 14),
+                      style: const TextStyle(fontSize: 14, color: Colors.black),
                       decoration: InputDecoration(
                         hintText: 'Password',
                         hintStyle: const TextStyle(color: Color(0xFFBDBDD8)),
