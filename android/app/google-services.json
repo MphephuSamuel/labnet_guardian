@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "162126843645",
+    "project_id": "labnet-21ceb",
+    "storage_bucket": "labnet-21ceb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:162126843645:android:7b052bf69609beac6fb894",
+        "android_client_info": {
+          "package_name": "com.example.labnet_guardian"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAwTciGizEP9i5gR9hosLLE6Pk4Yn5jelU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
