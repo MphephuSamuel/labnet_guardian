@@ -3,17 +3,24 @@ import 'package:provider/provider.dart';
 import 'providers/theme_provider.dart';
 import 'screens/login_screen.dart';
 
-void main() {
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'providers/auth_provider.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load();
+  await Firebase.initializeApp();
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
       ],
       child: const MyApp(),
     ),
   );
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -27,7 +34,9 @@ class MyApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           themeMode: themeProvider.themeMode,
           theme: ThemeData.light().copyWith(
-            scaffoldBackgroundColor: const Color(0xFFF8F9FA), // Light background like screenshot
+            scaffoldBackgroundColor: const Color(
+              0xFFF8F9FA,
+            ), // Light background like screenshot
             appBarTheme: const AppBarTheme(
               backgroundColor: Color(0xFFF8F9FA),
               foregroundColor: Colors.black,
@@ -38,7 +47,9 @@ class MyApp extends StatelessWidget {
             cardColor: Colors.white,
           ),
           darkTheme: ThemeData.dark().copyWith(
-            scaffoldBackgroundColor: const Color(0xFF0F0F1A), // Dark background like screenshot
+            scaffoldBackgroundColor: const Color(
+              0xFF0F0F1A,
+            ), // Dark background like screenshot
             appBarTheme: const AppBarTheme(
               backgroundColor: Color(0xFF0F0F1A),
               foregroundColor: Colors.white,

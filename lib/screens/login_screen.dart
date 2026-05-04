@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'biometric_screen.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,6 +14,8 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -58,7 +62,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             decoration: BoxDecoration(
                               color: const Color(0xFFFFB347),
                               shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 1.5),
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 1.5,
+                              ),
                             ),
                           ),
                         ),
@@ -91,17 +98,17 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 6),
               const Text(
                 'Login to monitor your lab network',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF9E9EB8),
-                ),
+                style: TextStyle(fontSize: 14, color: Color(0xFF9E9EB8)),
               ),
 
               const SizedBox(height: 60),
 
               // ── Login Card ──
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 32,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(24),
@@ -132,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextField(
                       controller: _usernameController,
                       keyboardType: TextInputType.emailAddress,
-                      style: const TextStyle(fontSize: 14),
+                      style: const TextStyle(fontSize: 14, color: Colors.black),
                       decoration: InputDecoration(
                         hintText: 'Username or Email',
                         hintStyle: const TextStyle(color: Color(0xFFBDBDD8)),
@@ -144,7 +151,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         filled: true,
                         fillColor: const Color(0xFFF5F5FC),
                         contentPadding: const EdgeInsets.symmetric(
-                            vertical: 16, horizontal: 16),
+                          vertical: 16,
+                          horizontal: 16,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(50),
                           borderSide: BorderSide.none,
@@ -156,7 +165,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(50),
                           borderSide: const BorderSide(
-                              color: Color(0xFF9B59B6), width: 1.5),
+                            color: Color(0xFF9B59B6),
+                            width: 1.5,
+                          ),
                         ),
                       ),
                     ),
@@ -167,7 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
-                      style: const TextStyle(fontSize: 14),
+                      style: const TextStyle(fontSize: 14, color: Colors.black),
                       decoration: InputDecoration(
                         hintText: 'Password',
                         hintStyle: const TextStyle(color: Color(0xFFBDBDD8)),
@@ -178,7 +189,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         suffixIcon: GestureDetector(
                           onTap: () => setState(
-                              () => _obscurePassword = !_obscurePassword),
+                            () => _obscurePassword = !_obscurePassword,
+                          ),
                           child: Icon(
                             _obscurePassword
                                 ? Icons.remove_red_eye_outlined
@@ -190,7 +202,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         filled: true,
                         fillColor: const Color(0xFFF5F5FC),
                         contentPadding: const EdgeInsets.symmetric(
-                            vertical: 16, horizontal: 16),
+                          vertical: 16,
+                          horizontal: 16,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(50),
                           borderSide: BorderSide.none,
@@ -202,14 +216,31 @@ class _LoginScreenState extends State<LoginScreen> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(50),
                           borderSide: const BorderSide(
-                              color: Color(0xFF9B59B6), width: 1.5),
+                            color: Color(0xFF9B59B6),
+                            width: 1.5,
+                          ),
                         ),
                       ),
                     ),
 
                     const SizedBox(height: 28),
 
-                    // ── Login Button ──
+                    // ── Error Message ──
+                    if (_errorMessage != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12.0),
+                        child: Center(
+                          child: Text(
+                            _errorMessage!,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    // ── Login Button or Loading ──
                     SizedBox(
                       width: double.infinity,
                       height: 52,
@@ -222,31 +253,85 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           borderRadius: BorderRadius.circular(50),
                         ),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const BiometricScreen(),
+                        child: _isLoading
+                            ? const Center(
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                ),
+                              )
+                            : ElevatedButton(
+                                onPressed: () async {
+                                  final email = _usernameController.text.trim();
+                                  final password = _passwordController.text
+                                      .trim();
+                                  setState(() {
+                                    _errorMessage = null;
+                                  });
+                                  if (email.isEmpty || password.isEmpty) {
+                                    setState(() {
+                                      _errorMessage =
+                                          'Please enter email and password';
+                                    });
+                                    return;
+                                  }
+                                  setState(() {
+                                    _isLoading = true;
+                                  });
+                                  try {
+                                    await Provider.of<AuthProvider>(
+                                      context,
+                                      listen: false,
+                                    ).signIn(email, password);
+                                    setState(() {
+                                      _isLoading = false;
+                                    });
+                                    // On success, navigate to next screen
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const BiometricScreen(),
+                                      ),
+                                    );
+                                  } catch (e) {
+                                    setState(() {
+                                      _isLoading = false;
+                                      // FirebaseAuthException error handling
+                                      final error = e.toString();
+                                      if (error.contains('wrong-password')) {
+                                        _errorMessage = 'Incorrect password.';
+                                      } else if (error.contains(
+                                        'user-not-found',
+                                      )) {
+                                        _errorMessage =
+                                            'No user found for that email.';
+                                      } else if (error.contains(
+                                        'invalid-email',
+                                      )) {
+                                        _errorMessage =
+                                            'Invalid email address.';
+                                      } else {
+                                        _errorMessage =
+                                            'Login failed. Please try again.';
+                                      }
+                                    });
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(50),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Login',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
                               ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            shadowColor: Colors.transparent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(50),
-                            ),
-                          ),
-                          child: const Text(
-                            'Login',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
                       ),
                     ),
 

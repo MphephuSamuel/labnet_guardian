@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/colors.dart';
 import '../widgets/analytics/stats_card.dart';
 import '../widgets/analytics/network_traffic_chart.dart';
 import '../widgets/analytics/bandwidth_bar_chart.dart';
@@ -18,19 +19,31 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bgColor = AppColors.getBgColor(isDarkMode);
+    final cardColor = AppColors.getCardColor(isDarkMode);
+    final textPrimary = AppColors.getTextPrimary(isDarkMode);
+    final textSecondary = AppColors.getTextSecondary(isDarkMode);
+
     return Scaffold(
-      backgroundColor:
-          isDarkMode ? const Color(0xFF121212) : const Color(0xFFF5F7FB),
+      backgroundColor: bgColor,
 
       appBar: AppBar(
+        backgroundColor: cardColor,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back, color: textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text("Analytics And Reports "),
+        title: Text(
+          "Analytics & Reports",
+          style: TextStyle(color: textPrimary),
+        ),
         actions: [
           IconButton(
-            icon: Icon(isDarkMode ? Icons.dark_mode : Icons.light_mode),
+            icon: Icon(
+              isDarkMode ? Icons.dark_mode : Icons.light_mode,
+              color: textPrimary,
+            ),
             onPressed: () {
               setState(() {
                 isDarkMode = !isDarkMode;
@@ -61,14 +74,23 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: selected ? Colors.blue : Colors.white,
+                      gradient: selected
+                          ? const LinearGradient(
+                              colors: [
+                                AppColors.gradientStart,
+                                AppColors.gradientEnd,
+                              ],
+                            )
+                          : null,
+                      color: selected ? null : cardColor,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.blue),
                     ),
                     child: Text(
                       range,
                       style: TextStyle(
-                        color: selected ? Colors.white : Colors.blue,
+                        color: selected
+                            ? Colors.white
+                            : AppColors.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -86,85 +108,118 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               physics: const NeverScrollableScrollPhysics(),
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
-              children: const [
+              children: [
                 StatsCard(
                   title: "Avg Bandwidth",
                   value: "428 GB",
                   change: "+12.5%",
                   icon: Icons.wifi,
-                  color: Colors.blue,
+                  color: AppColors.iconBlue,
+                  isDarkMode: isDarkMode,
                 ),
                 StatsCard(
                   title: "Active Devices",
                   value: "87",
                   change: "+5",
                   icon: Icons.devices,
-                  color: Colors.green,
+                  color: AppColors.connection,
+                  isDarkMode: isDarkMode,
                 ),
                 StatsCard(
                   title: "Threats Blocked",
                   value: "55",
                   change: "-8",
                   icon: Icons.security,
-                  color: Colors.red,
+                  color: AppColors.critical,
+                  isDarkMode: isDarkMode,
                 ),
                 StatsCard(
                   title: "Anomalies",
                   value: "12",
                   change: "+2",
                   icon: Icons.warning,
-                  color: Colors.orange,
+                  color: AppColors.warning,
+                  isDarkMode: isDarkMode,
                 ),
               ],
             ),
 
             const SizedBox(height: 25),
 
-            NetworkTrafficChart(range: selectedRange),
+            // 📊 NETWORK TRAFFIC CHART (FIXED)
+            NetworkTrafficChart(
+              range: selectedRange,
+              isDarkMode: isDarkMode,
+            ),
 
             const SizedBox(height: 25),
 
-            BandwidthBarChart(range: selectedRange),
+            // 📊 BANDWIDTH CHART (FIXED)
+            BandwidthBarChart(
+              range: selectedRange,
+              isDarkMode: isDarkMode,
+            ),
 
             const SizedBox(height: 25),
 
-            ThreatTimelineChart(range: selectedRange),
+            // 📊 THREAT TIMELINE CHART (FIXED)
+            ThreatTimelineChart(
+              range: selectedRange,
+              isDarkMode: isDarkMode,
+            ),
 
             const SizedBox(height: 25),
 
+            // 📥 PDF BUTTON
             ElevatedButton.icon(
-  onPressed: () {
-    PdfService.generateAdvancedReport(range: selectedRange);
-  },
-  icon: const Icon(Icons.picture_as_pdf),
-  label: const Text("Download Report"),
-  style: ElevatedButton.styleFrom(
-    backgroundColor: Colors.red,
-    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-  ),
-),
+              onPressed: () {
+                PdfService.generateAdvancedReport(range: selectedRange);
+              },
+              icon: const Icon(Icons.picture_as_pdf),
+              label: const Text("Download Report"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.critical,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              ),
+            ),
+
+            const SizedBox(height: 20),
 
             // 📄 REPORT SUMMARY
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     "Report Summary",
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: textPrimary,
+                    ),
                   ),
-                  SizedBox(height: 10),
-                  Text("• Data analysed across Day, Week, Month, Year."),
-                  Text("• Bandwidth usage shows consistent growth."),
-                  Text("• Active devices stable."),
-                  Text("• Threat detection increased at peak times."),
-                  Text("• System anomalies detected successfully."),
+                  const SizedBox(height: 10),
+                  Text("• Data analysed across all time ranges.",
+                      style: TextStyle(color: textSecondary)),
+                  Text("• Bandwidth usage shows consistent growth.",
+                      style: TextStyle(color: textSecondary)),
+                  Text("• Active devices stable.",
+                      style: TextStyle(color: textSecondary)),
+                  Text("• Threat detection peaks at busy hours.",
+                      style: TextStyle(color: textSecondary)),
+                  Text("• System anomalies handled effectively.",
+                      style: TextStyle(color: textSecondary)),
                 ],
               ),
             ),
