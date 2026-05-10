@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'biometric_screen.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import 'package:flutter/services.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,6 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
+  String? _token; // Add a variable to store the token
 
   @override
   void dispose() {
@@ -26,6 +28,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+
     return Scaffold(
       backgroundColor: const Color(0xFFEFEEF8),
       body: SafeArea(
@@ -240,100 +244,142 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
 
-                    // ── Login Button or Loading ──
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF8B3DCA), Color(0xFFE91E8C)],
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                          ),
-                          borderRadius: BorderRadius.circular(50),
-                        ),
-                        child: _isLoading
-                            ? const Center(
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
+                    // ── Token Display ──
+                    if (authProvider.isAuthenticated && authProvider.token != null)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Token: ${authProvider.token}',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF1A1A2E),
                                 ),
-                              )
-                            : ElevatedButton(
-                                onPressed: () async {
-                                  final email = _usernameController.text.trim();
-                                  final password = _passwordController.text
-                                      .trim();
-                                  setState(() {
-                                    _errorMessage = null;
-                                  });
-                                  if (email.isEmpty || password.isEmpty) {
-                                    setState(() {
-                                      _errorMessage =
-                                          'Please enter email and password';
-                                    });
-                                    return;
-                                  }
-                                  setState(() {
-                                    _isLoading = true;
-                                  });
-                                  try {
-                                    await Provider.of<AuthProvider>(
-                                      context,
-                                      listen: false,
-                                    ).signIn(email, password);
-                                    setState(() {
-                                      _isLoading = false;
-                                    });
-                                    // On success, navigate to next screen
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => const BiometricScreen(),
-                                      ),
-                                    );
-                                  } catch (e) {
-                                    setState(() {
-                                      _isLoading = false;
-                                      // FirebaseAuthException error handling
-                                      final error = e.toString();
-                                      if (error.contains('wrong-password')) {
-                                        _errorMessage = 'Incorrect password.';
-                                      } else if (error.contains(
-                                        'user-not-found',
-                                      )) {
-                                        _errorMessage =
-                                            'No user found for that email.';
-                                      } else if (error.contains(
-                                        'invalid-email',
-                                      )) {
-                                        _errorMessage =
-                                            'Invalid email address.';
-                                      } else {
-                                        _errorMessage =
-                                            'Login failed. Please try again.';
-                                      }
-                                    });
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.transparent,
-                                  shadowColor: Colors.transparent,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(50),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.copy, color: Color(0xFF7B2FBE)),
+                              onPressed: () {
+                                Clipboard.setData(
+                                  ClipboardData(text: authProvider.token!),
+                                );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Token copied to clipboard!'),
                                   ),
-                                ),
-                                child: const Text(
-                                  'Login',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    // ── Redirect Button ──
+                    if (authProvider.isAuthenticated && authProvider.token != null)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const BiometricScreen(),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF7B2FBE),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(50),
+                            ),
+                          ),
+                          child: const Text(
+                            'Redirect',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    // ── Login Button or Loading ──
+                    if (!authProvider.isAuthenticated)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF8B3DCA), Color(0xFFE91E8C)],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                            borderRadius: BorderRadius.circular(50),
+                          ),
+                          child: _isLoading
+                              ? const Center(
+                                  child: CircularProgressIndicator(
                                     color: Colors.white,
                                   ),
+                                )
+                              : ElevatedButton(
+                                  onPressed: () async {
+                                    final email = _usernameController.text
+                                        .trim();
+                                    final password = _passwordController.text
+                                        .trim();
+                                    setState(() {
+                                      _errorMessage = null;
+                                    });
+                                    if (email.isEmpty || password.isEmpty) {
+                                      setState(() {
+                                        _errorMessage =
+                                            'Please enter email and password';
+                                      });
+                                      return;
+                                    }
+                                    setState(() {
+                                      _isLoading = true;
+                                    });
+                                    try {
+                                      await authProvider.signIn(
+                                        email,
+                                        password,
+                                      );
+                                      setState(() {
+                                        _isLoading = false;
+                                      });
+                                    } catch (e) {
+                                      setState(() {
+                                        _isLoading = false;
+                                        _errorMessage = e.toString();
+                                      });
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(50),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Login',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                        ),
                       ),
-                    ),
 
                     const SizedBox(height: 16),
 
