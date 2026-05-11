@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/colors.dart';
+import '../utils/time_utils.dart';
 
-// ─── Alert severity ───────────────────────────────────────────────────────────
 enum AlertSeverity { critical, warning, info }
 
 extension AlertSeverityX on AlertSeverity {
@@ -61,7 +61,6 @@ extension AlertSeverityX on AlertSeverity {
   }
 }
 
-// ─── Alert model ─────────────────────────────────────────────────────────────
 class AlertItem {
   final String id;
   final String title;
@@ -87,7 +86,7 @@ class AlertItem {
     description: j['description'] ?? '',
     device: j['device'] ?? '',
     ip: j['ip'] ?? '',
-    time: j['time'] ?? '',
+    time: TimeUtils.timeAgo(j['time'] ?? ''),
     severity: AlertSeverityX.fromString(j['severity'] ?? 'info'),
   );
 }
