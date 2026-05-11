@@ -3,7 +3,7 @@ param(
 )
 
 $projectRoot = Split-Path -Parent $PSCommandPath
-$backendDir = Join-Path $projectRoot "backend"
+$backendDir = Join-Path $projectRoot "scanner"
 
 Write-Host ""
 Write-Host "================================" -ForegroundColor Cyan

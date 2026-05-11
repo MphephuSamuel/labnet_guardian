@@ -3,7 +3,7 @@
 #   .\run-full-setup.ps1
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$backendDir = Join-Path $scriptDir 'backend'
+$backendDir = Join-Path $scriptDir 'scanner'
 $backendScript = 'scan_network_api.py'
 $pythonExe = 'python'
 
