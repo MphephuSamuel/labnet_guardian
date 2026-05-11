@@ -108,11 +108,14 @@ class DeviceCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(
-                      device.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                    Flexible(
+                      child: Text(
+                        device.name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     if (device.isNew) ...[
