@@ -88,13 +88,36 @@ class HistoryItem {
     required this.type,
   });
 
-  factory HistoryItem.fromJson(Map<String, dynamic> j) => HistoryItem(
-    id: j['id']?.toString() ?? '',
-    title: j['title'] ?? '',
-    device: j['device'] ?? '',
-    ip: j['ip'] ?? '',
-    time: j['time'] ?? '',
-    dateGroup: j['date_group'] ?? 'Today',
-    type: HistoryTypeX.fromString(j['type'] ?? 'connection'),
-  );
+  factory HistoryItem.fromJson(Map<String, dynamic> j) {
+    // Handle Firestore timestamp
+    String time = '';
+    String dateGroup = 'Today';
+    if (j['createdAt'] is Map && j['createdAt']['_seconds'] != null) {
+      final dt = DateTime.fromMillisecondsSinceEpoch(
+        j['createdAt']['_seconds'] * 1000,
+      );
+      time =
+          '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+      final now = DateTime.now();
+      if (dt.year == now.year && dt.month == now.month && dt.day == now.day) {
+        dateGroup = 'Today';
+      } else if (dt.year == now.year &&
+          dt.month == now.month &&
+          dt.day == now.day - 1) {
+        dateGroup = 'Yesterday';
+      } else {
+        dateGroup =
+            '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+      }
+    }
+    return HistoryItem(
+      id: j['id']?.toString() ?? '',
+      title: j['title'] ?? '',
+      device: j['hostName'] ?? j['device'] ?? '',
+      ip: j['ip'] ?? '',
+      time: time,
+      dateGroup: dateGroup,
+      type: HistoryTypeX.fromString(j['type'] ?? 'connection'),
+    );
+  }
 }
