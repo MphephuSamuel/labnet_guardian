@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-//import '../providers/app_theme.dart';
 import '../providers/theme_provider.dart';
 import '../models/alert.dart';
 import '../utils/colors.dart';
@@ -18,10 +17,11 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
   int _selectedTab = 0;
   final List<String> _tabs = ['All', 'Critical', 'Warning', 'Info'];
 
-  // ── State ──────────────────────────────────────────────────────────────────
   List<AlertItem> _alerts = [];
   bool _isLoading = true;
   String? _error;
+
+  final AlertService _service = AlertService();
 
   @override
   void initState() {
@@ -29,87 +29,54 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
     _loadAlerts();
   }
 
+  // 🔥 CLEAN DATA LOADING
   Future<void> _loadAlerts() async {
-    setState(() { _isLoading = true; _error = null; });
-    
-    // Mockup data for demonstration
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (!mounted) return;
-    
-    final mockAlerts = [
-      AlertItem(
-        id: '1',
-        title: 'Suspicious Login Attempt',
-        description: 'Multiple failed login attempts detected from unknown device',
-        device: 'LAB-PC-001',
-        ip: '192.168.1.45',
-        time: '2 minutes ago',
-        severity: AlertSeverity.critical,
-      ),
-      AlertItem(
-        id: '2',
-        title: 'Unusual Network Traffic',
-        description: 'Abnormal data transfer patterns detected on device',
-        device: 'IOT-SENSOR-01',
-        ip: '192.168.1.112',
-        time: '15 minutes ago',
-        severity: AlertSeverity.warning,
-      ),
-      AlertItem(
-        id: '3',
-        title: 'New Device Connected',
-        description: 'Previously unseen device joined the network',
-        device: 'PHONE-CS-023',
-        ip: '192.168.1.92',
-        time: '1 hour ago',
-        severity: AlertSeverity.info,
-      ),
-      AlertItem(
-        id: '4',
-        title: 'Firewall Rule Triggered',
-        description: 'Blocked connection attempt to restricted port',
-        device: 'TABLET-ENG-015',
-        ip: '192.168.1.78',
-        time: '2 hours ago',
-        severity: AlertSeverity.warning,
-      ),
-      AlertItem(
-        id: '5',
-        title: 'System Update Available',
-        description: 'Security patches ready for installation',
-        device: 'LAB-PC-002',
-        ip: '192.168.1.46',
-        time: '3 hours ago',
-        severity: AlertSeverity.info,
-      ),
-    ];
-    
     setState(() {
-      _isLoading = false;
-      _alerts = mockAlerts;
+      _isLoading = true;
+      _error = null;
     });
+    try {
+      final alerts = await _service.fetchAlerts();
+      if (!mounted) return;
+      setState(() {
+        _alerts = alerts;
+        _isLoading = false;
+      });
+    } catch (e, stack) {
+      print('AlertsScreen._loadAlerts error: $e\n$stack');
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
   }
 
   List<AlertItem> get _filtered {
     switch (_selectedTab) {
-      case 1: return _alerts.where((a) => a.severity == AlertSeverity.critical).toList();
-      case 2: return _alerts.where((a) => a.severity == AlertSeverity.warning).toList();
-      case 3: return _alerts.where((a) => a.severity == AlertSeverity.info).toList();
-      default: return _alerts;
+      case 1:
+        return _alerts
+            .where((a) => a.severity == AlertSeverity.critical)
+            .toList();
+      case 2:
+        return _alerts
+            .where((a) => a.severity == AlertSeverity.warning)
+            .toList();
+      case 3:
+        return _alerts.where((a) => a.severity == AlertSeverity.info).toList();
+      default:
+        return _alerts;
     }
   }
 
-  int get _criticalCount => _alerts.where((a) => a.severity == AlertSeverity.critical).length;
-  int get _warningCount  => _alerts.where((a) => a.severity == AlertSeverity.warning).length;
-  int get _infoCount     => _alerts.where((a) => a.severity == AlertSeverity.info).length;
+  int get _criticalCount =>
+      _alerts.where((a) => a.severity == AlertSeverity.critical).length;
 
-  // ── Navigation helpers ─────────────────────────────────────────────────────
-  void _openProfile(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const ProfileScreen()),
-    );
-  }
+  int get _warningCount =>
+      _alerts.where((a) => a.severity == AlertSeverity.warning).length;
+
+  int get _infoCount =>
+      _alerts.where((a) => a.severity == AlertSeverity.info).length;
 
   @override
   Widget build(BuildContext context) {
@@ -124,7 +91,7 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
       backgroundColor: bgColor,
       body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          // No top bar
           children: [
             Expanded(
               child: RefreshIndicator(
@@ -134,13 +101,15 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   children: [
                     const SizedBox(height: 8),
-                    Text('Security Alerts',
-                        style: TextStyle(
-                          color: textColor,
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.5,
-                        )),
+                    Text(
+                      'Security Alerts',
+                      style: TextStyle(
+                        color: textColor,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
                     const SizedBox(height: 20),
                     _tabsRow(isDark, subColor),
                     const SizedBox(height: 20),
@@ -153,17 +122,20 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
                     else if (_filtered.isEmpty)
                       _emptyState(subColor)
                     else
-                      ..._filtered.asMap().entries.map((e) => Padding(
-                            padding: EdgeInsets.only(
-                                bottom: e.key < _filtered.length - 1 ? 12 : 20),
-                            child: _alertCard(
-                              isDark: isDark,
-                              cardColor: cardColor,
-                              textColor: textColor,
-                              subColor: subColor,
-                              alert: e.value,
-                            ),
-                          )),
+                      ..._filtered.asMap().entries.map(
+                        (e) => Padding(
+                          padding: EdgeInsets.only(
+                            bottom: e.key < _filtered.length - 1 ? 12 : 20,
+                          ),
+                          child: _alertCard(
+                            isDark: isDark,
+                            cardColor: cardColor,
+                            textColor: textColor,
+                            subColor: subColor,
+                            alert: e.value,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -175,7 +147,12 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
   }
 
   // ── Top bar ────────────────────────────────────────────────────────────────
-  Widget _topBar(bool isDark, ThemeProvider theme, Color textColor, BuildContext ctx) {
+  Widget _topBar(
+    bool isDark,
+    ThemeProvider theme,
+    Color textColor,
+    BuildContext ctx,
+  ) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       child: Row(
@@ -184,7 +161,9 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
           const Spacer(),
           _circleBtn(
             isDark ? Icons.wb_sunny_outlined : Icons.nightlight_round_outlined,
-            isDark, textColor, onTap: theme.toggleTheme,
+            isDark,
+            textColor,
+            onTap: theme.toggleTheme,
           ),
           const SizedBox(width: 10),
           // Notification bell — tapping here does nothing extra since we ARE
@@ -194,11 +173,14 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
               _circleBtn(Icons.notifications_outlined, isDark, textColor),
               if (_criticalCount > 0)
                 Positioned(
-                  right: 8, top: 8,
+                  right: 8,
+                  top: 8,
                   child: Container(
-                    width: 8, height: 8,
+                    width: 8,
+                    height: 8,
                     decoration: const BoxDecoration(
-                      color: AppColors.critical, shape: BoxShape.circle,
+                      color: AppColors.critical,
+                      shape: BoxShape.circle,
                     ),
                   ),
                 ),
@@ -209,17 +191,21 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
           GestureDetector(
             onTap: () => _openProfile(ctx),
             child: Container(
-              width: 40, height: 40,
+              width: 40,
+              height: 40,
               decoration: const BoxDecoration(
-                color: AppColors.gradientStart, shape: BoxShape.circle,
+                color: AppColors.gradientStart,
+                shape: BoxShape.circle,
               ),
               child: const Center(
-                child: Text('A',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                    )),
+                child: Text(
+                  'A',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
+                ),
               ),
             ),
           ),
@@ -228,18 +214,32 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
     );
   }
 
-  Widget _circleBtn(IconData icon, bool isDark, Color color, {VoidCallback? onTap}) {
+  void _openProfile(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ProfileScreen()),
+    );
+  }
+
+  Widget _circleBtn(
+    IconData icon,
+    bool isDark,
+    Color color, {
+    VoidCallback? onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 40, height: 40,
+        width: 40,
+        height: 40,
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkCard : AppColors.lightCard,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
-              blurRadius: 8, offset: const Offset(0, 2),
+              color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -248,51 +248,75 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
     );
   }
 
-  // ── Tabs ───────────────────────────────────────────────────────────────────
+  // ================= UI COMPONENTS =================
+
   Widget _tabsRow(bool isDark, Color subColor) {
     return Row(
       children: List.generate(_tabs.length, (i) {
         final isActive = i == _selectedTab;
+
         return GestureDetector(
           onTap: () => setState(() => _selectedTab = i),
-          child: Container(
-            margin: const EdgeInsets.only(right: 24),
-            padding: const EdgeInsets.only(bottom: 8),
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: isActive ? AppColors.gradientStart : Colors.transparent,
-                  width: 2.5,
-                ),
+          child: Padding(
+            padding: const EdgeInsets.only(right: 24),
+            child: Text(
+              _tabs[i],
+              style: TextStyle(
+                color: isActive ? AppColors.gradientStart : subColor,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
               ),
             ),
-            child: Text(_tabs[i],
-                style: TextStyle(
-                  color: isActive ? AppColors.gradientStart : subColor,
-                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                  fontSize: 15,
-                )),
           ),
         );
       }),
     );
   }
 
-  // ── Stat cards ─────────────────────────────────────────────────────────────
   Widget _statCards(bool isDark, Color cardColor, Color subColor) {
     return Row(
       children: [
-        _statCard(isDark, cardColor, subColor, '$_criticalCount', 'Critical', AppColors.critical, 1),
+        _statCard(
+          isDark,
+          cardColor,
+          subColor,
+          '$_criticalCount',
+          'Critical',
+          AppColors.critical,
+          1,
+        ),
         const SizedBox(width: 12),
-        _statCard(isDark, cardColor, subColor, '$_warningCount',  'Warning',  AppColors.warning,  2),
+        _statCard(
+          isDark,
+          cardColor,
+          subColor,
+          '$_warningCount',
+          'Warning',
+          AppColors.warning,
+          2,
+        ),
         const SizedBox(width: 12),
-        _statCard(isDark, cardColor, subColor, '$_infoCount',     'Info',     AppColors.info,     3),
+        _statCard(
+          isDark,
+          cardColor,
+          subColor,
+          '$_infoCount',
+          'Info',
+          AppColors.info,
+          3,
+        ),
       ],
     );
   }
 
-  Widget _statCard(bool isDark, Color cardColor, Color subColor,
-      String count, String label, Color color, int tabIndex) {
+  Widget _statCard(
+    bool isDark,
+    Color cardColor,
+    Color subColor,
+    String count,
+    String label,
+    Color color,
+    int tabIndex,
+  ) {
     final isActive = _selectedTab == tabIndex;
     return Expanded(
       child: GestureDetector(
@@ -301,21 +325,42 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 18),
           decoration: BoxDecoration(
-            color: isActive ? color.withValues(alpha: isDark ? 0.2 : 0.08) : cardColor,
+            color: isActive
+                ? color.withOpacity(isDark ? 0.2 : 0.08)
+                : cardColor,
             borderRadius: BorderRadius.circular(16),
-            border: isActive ? Border.all(color: color.withValues(alpha: 0.5), width: 1.5) : null,
+            border: isActive
+                ? Border.all(color: color.withOpacity(0.5), width: 1.5)
+                : null,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
-                blurRadius: 10, offset: const Offset(0, 2),
+                color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
-          child: Column(children: [
-            Text(count, style: TextStyle(color: color, fontSize: 28, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 4),
-            Text(label, style: TextStyle(color: subColor, fontSize: 12, fontWeight: FontWeight.w500)),
-          ]),
+          child: Column(
+            children: [
+              Text(
+                count,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  color: subColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -326,11 +371,19 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 60),
       child: Center(
-        child: Column(children: [
-          CircularProgressIndicator(color: AppColors.gradientStart, strokeWidth: 2.5),
-          const SizedBox(height: 16),
-          Text('Loading alerts…', style: TextStyle(color: subColor, fontSize: 14)),
-        ]),
+        child: Column(
+          children: [
+            CircularProgressIndicator(
+              color: AppColors.gradientStart,
+              strokeWidth: 2.5,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Loading alerts…',
+              style: TextStyle(color: subColor, fontSize: 14),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -341,28 +394,46 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.critical.withValues(alpha: 0.08),
+          color: AppColors.critical.withOpacity(0.08),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.critical.withValues(alpha: 0.25)),
+          border: Border.all(color: AppColors.critical.withOpacity(0.25)),
         ),
-        child: Column(children: [
-          Icon(Icons.cloud_off_rounded, color: AppColors.critical.withValues(alpha: 0.7), size: 44),
-          const SizedBox(height: 12),
-          Text(_error!, textAlign: TextAlign.center,
-              style: TextStyle(color: subColor, fontSize: 13, height: 1.5)),
-          const SizedBox(height: 16),
-          GestureDetector(
-            onTap: _loadAlerts,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppColors.gradientStart,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Text('Retry', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+        child: Column(
+          children: [
+            Icon(
+              Icons.cloud_off_rounded,
+              color: AppColors.critical.withOpacity(0.7),
+              size: 44,
             ),
-          ),
-        ]),
+            const SizedBox(height: 12),
+            Text(
+              _error ?? 'Error loading alerts',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: subColor, fontSize: 13, height: 1.5),
+            ),
+            const SizedBox(height: 16),
+            GestureDetector(
+              onTap: _loadAlerts,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.gradientStart,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Text(
+                  'Retry',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -371,13 +442,24 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 60),
       child: Center(
-        child: Column(children: [
-          Icon(Icons.check_circle_outline_rounded,
-              color: subColor.withValues(alpha: 0.4), size: 56),
-          const SizedBox(height: 16),
-          Text('No alerts in this category',
-              style: TextStyle(color: subColor, fontSize: 15, fontWeight: FontWeight.w500)),
-        ]),
+        child: Column(
+          children: [
+            Icon(
+              Icons.check_circle_outline_rounded,
+              color: subColor.withOpacity(0.4),
+              size: 56,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No alerts in this category',
+              style: TextStyle(
+                color: subColor,
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -398,54 +480,86 @@ class _SecurityAlertsScreenState extends State<SecurityAlertsScreen> {
         border: Border(left: BorderSide(color: sev.color, width: 3.5)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
-            blurRadius: 10, offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       padding: const EdgeInsets.all(16),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Container(
-            width: 44, height: 44,
-            decoration: BoxDecoration(
-              color: isDark ? sev.color.withValues(alpha: 0.15) : sev.bgLight,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(sev.icon, color: sev.color, size: 22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: isDark ? sev.color.withOpacity(0.15) : sev.bgLight,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(sev.icon, color: sev.color, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  alert.title,
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    height: 1.3,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: sev.color,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  sev.label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(alert.title,
+          const SizedBox(height: 10),
+          Text(
+            alert.description,
+            style: TextStyle(color: subColor, fontSize: 13, height: 1.4),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(Icons.show_chart, color: subColor, size: 14),
+              const SizedBox(width: 4),
+              Text(
+                alert.device,
                 style: TextStyle(
-                  color: textColor, fontSize: 15,
-                  fontWeight: FontWeight.w700, height: 1.3,
-                )),
+                  color: subColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Spacer(),
+              Text(alert.time, style: TextStyle(color: subColor, fontSize: 12)),
+            ],
           ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(color: sev.color, borderRadius: BorderRadius.circular(20)),
-            child: Text(sev.label,
-                style: const TextStyle(
-                  color: Colors.white, fontSize: 11,
-                  fontWeight: FontWeight.w700, letterSpacing: 0.3,
-                )),
-          ),
-        ]),
-        const SizedBox(height: 10),
-        Text(alert.description,
-            style: TextStyle(color: subColor, fontSize: 13, height: 1.4)),
-        const SizedBox(height: 12),
-        Row(children: [
-          Icon(Icons.show_chart, color: subColor, size: 14),
-          const SizedBox(width: 4),
-          Text(alert.device,
-              style: TextStyle(color: subColor, fontSize: 12, fontWeight: FontWeight.w500)),
-          const Spacer(),
-          Text(alert.time, style: TextStyle(color: subColor, fontSize: 12)),
-        ]),
-      ]),
+        ],
+      ),
     );
   }
 }
