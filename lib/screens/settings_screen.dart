@@ -71,6 +71,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _buildWhitelistManagement(isDark),
                 const SizedBox(height: AppConstants.paddingLg),
                 _buildNotificationPreferences(isDark),
+                
               ],
             ),
           ),
