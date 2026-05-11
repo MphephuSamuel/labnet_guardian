@@ -1,23 +1,30 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import '../models/history.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// CONFIG — swap baseUrl to your real backend when ready
-// ─────────────────────────────────────────────────────────────────────────────
-class ApiConfig {
-  /// Change this to your backend base URL, e.g.
-  ///   'http://192.168.1.10:8000'   (local dev)
-  ///   'https://api.mynetwork.com'  (production)
-  static const String baseUrl = 'http://YOUR_BACKEND_URL';
+class HistoryConfig {
+  static String get baseUrl {
+    final envUrl = dotenv.env['SCAN_API_URL']?.trim();
+    if (envUrl != null && envUrl.isNotEmpty) {
+      if (Platform.isAndroid &&
+          (envUrl.startsWith('http://localhost') ||
+              envUrl.startsWith('http://127.0.0.1'))) {
+        return 'http://10.0.2.2:5000';
+      }
+      return envUrl;
+    }
 
-  /// Add auth headers here once your backend requires them, e.g.
-  ///   'Authorization': 'Bearer $token'
+    return Platform.isAndroid
+        ? 'http://10.0.2.2:5000'
+        : 'http://localhost:5000';
+  }
+
   static Map<String, String> get headers => {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        // 'Authorization': 'Bearer YOUR_TOKEN',
-      };
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
 
   static Duration get timeout => const Duration(seconds: 15);
 }
@@ -41,15 +48,15 @@ class ApiResult<T> {
 // ─────────────────────────────────────────────────────────────────────────────
 // API SERVICE
 // ─────────────────────────────────────────────────────────────────────────────
-class ApiService {
+class HistoryService {
   // ── Shared HTTP helper ────────────────────────────────────────────────────
   static Future<http.Response> _get(String path) {
     return http
         .get(
-          Uri.parse('${ApiConfig.baseUrl}$path'),
-          headers: ApiConfig.headers,
+          Uri.parse('${HistoryConfig.baseUrl}$path'),
+          headers: HistoryConfig.headers,
         )
-        .timeout(ApiConfig.timeout);
+        .timeout(HistoryConfig.timeout);
   }
 
   // ── HISTORY ───────────────────────────────────────────────────────────────
@@ -57,8 +64,9 @@ class ApiService {
   /// Expected JSON: [ { "id", "title", "device", "ip", "time",
   ///                    "date_group", "type": "connection"|"disconnection"|
   ///                    "anomaly"|"update"|"scan" } ]
-  static Future<ApiResult<List<HistoryItem>>> fetchHistory(
-      {String query = ''}) async {
+  static Future<ApiResult<List<HistoryItem>>> fetchHistory({
+    String query = '',
+  }) async {
     try {
       final path = query.isEmpty
           ? '/api/history'
@@ -67,7 +75,8 @@ class ApiService {
       if (res.statusCode == 200) {
         final List<dynamic> json = jsonDecode(res.body);
         return ApiResult.success(
-            json.map((j) => HistoryItem.fromJson(j)).toList());
+          json.map((j) => HistoryItem.fromJson(j)).toList(),
+        );
       }
       return ApiResult.failure('Server error ${res.statusCode}');
     } catch (e) {

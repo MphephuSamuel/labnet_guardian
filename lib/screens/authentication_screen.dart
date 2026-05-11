@@ -28,10 +28,7 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen>
       curve: Curves.elasticOut,
     );
 
-    _fadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeIn,
-    );
+    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
 
     _controller.forward();
 
@@ -40,7 +37,7 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen>
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const MainLayout(initialIndex: 0)),
+          MaterialPageRoute(builder: (_) => const MainLayout(initialIndex: 1)),
         );
       }
     });
@@ -78,7 +75,9 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen>
                       ),
                       boxShadow: [
                         BoxShadow(
-                              color: const Color(0xFF2EAD60).withValues(alpha: 0.35),
+                          color: const Color(
+                            0xFF2EAD60,
+                          ).withValues(alpha: 0.35),
                           blurRadius: 40,
                           offset: const Offset(0, 16),
                         ),
@@ -111,10 +110,7 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen>
                 // ── Subtitle ──
                 const Text(
                   'Redirecting to dashboard...',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF9E9EB8),
-                  ),
+                  style: TextStyle(fontSize: 14, color: Color(0xFF9E9EB8)),
                 ),
               ],
             ),

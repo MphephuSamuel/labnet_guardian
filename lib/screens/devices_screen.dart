@@ -1,75 +1,48 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../models/device.dart';
+import '../services/network_scan_service.dart';
 import '../widgets/devices/device_card.dart';
 import '../widgets/devices/device_filter.dart';
 
-class DevicesScreen extends StatelessWidget {
+class DevicesScreen extends StatefulWidget {
   const DevicesScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Mock Data based on screenshots
-    final List<Device> mockDevices = [
-      Device(
-        id: '1',
-        name: 'LAB-PC-001',
-        ipAddress: '192.168.1.45',
-        macAddress: '00:1B:44:11:3A:B7',
-        speedMBs: 125,
-        status: DeviceStatus.active,
-        type: DeviceType.laptop,
-      ),
-      Device(
-        id: '2',
-        name: 'TABLET-ENG-015',
-        ipAddress: '192.168.1.78',
-        macAddress: 'A4:5E:60:E8:91:2C',
-        speedMBs: 45,
-        status: DeviceStatus.active,
-        type: DeviceType.tablet,
-        isSuspicious: true,
-      ),
-      Device(
-        id: '3',
-        name: 'PHONE-CS-023',
-        ipAddress: '192.168.1.92',
-        macAddress: 'D8:BB:C1:0E:7A:3D',
-        speedMBs: 12,
-        status: DeviceStatus.active,
-        type: DeviceType.phone,
-        isNew: true,
-      ),
-      Device(
-        id: '4',
-        name: 'LAB-PC-002',
-        ipAddress: '192.168.1.46',
-        macAddress: '00:1B:44:11:3A:B8',
-        speedMBs: 0,
-        status: DeviceStatus.offline,
-        type: DeviceType.laptop,
-      ),
-      Device(
-        id: '5',
-        name: 'PHONE-ENG-04',
-        ipAddress: '192.168.1.95',
-        macAddress: 'A4:5E:60:E8:91:2D',
-        speedMBs: 5,
-        status: DeviceStatus.active,
-        type: DeviceType.phone,
-        isNew: true,
-      ),
-      Device(
-        id: '6',
-        name: 'IOT-SENSOR-01',
-        ipAddress: '192.168.1.112',
-        macAddress: 'AA:BB:CC:DD:EE:FF',
-        speedMBs: 250,
-        status: DeviceStatus.active,
-        type: DeviceType.other,
-        isSuspicious: true,
-      ),
-    ];
+  State<DevicesScreen> createState() => _DevicesScreenState();
+}
 
+class _DevicesScreenState extends State<DevicesScreen> {
+  late Future<ApiResult<List<Device>>> _devicesFuture;
+  Timer? _refreshTimer;
+  DateTime? _lastRefreshTime;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDevices();
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _loadDevices(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadDevices() async {
+    setState(() {
+      _devicesFuture = NetworkScanService.fetchDevices();
+      _lastRefreshTime = DateTime.now();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
@@ -93,18 +66,89 @@ class DevicesScreen extends StatelessWidget {
               fillColor: Theme.of(context).cardColor,
             ),
           ),
-          const SizedBox(height: 24),
-          const DeviceFilter(
-            totalCount: 6,
-            newCount: 2,
-            suspiciousCount: 2,
-          ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
+          if (_lastRefreshTime != null)
+            Text(
+              'Last updated: ${_lastRefreshTime!.toLocal().toString().split('.').first}',
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodySmall?.color,
+                fontSize: 12,
+              ),
+            ),
+          const SizedBox(height: 16),
           Expanded(
-            child: ListView.builder(
-              itemCount: mockDevices.length,
-              itemBuilder: (context, index) {
-                return DeviceCard(device: mockDevices[index]);
+            child: FutureBuilder<ApiResult<List<Device>>>(
+              future: _devicesFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (snapshot.hasError ||
+                    snapshot.data == null ||
+                    snapshot.data!.hasError) {
+                  final errorMessage =
+                      snapshot.data?.error ??
+                      'Unable to load connected devices.';
+                  return Center(
+                    child: Text(
+                      errorMessage,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  );
+                }
+
+                final devices = snapshot.data!.data ?? <Device>[];
+                final suspiciousCount = devices
+                    .where((device) => device.isSuspicious)
+                    .length;
+                final newCount = devices.where((device) => device.isNew).length;
+
+                return Column(
+                  children: [
+                    DeviceFilter(
+                      totalCount: devices.length,
+                      newCount: newCount,
+                      suspiciousCount: suspiciousCount,
+                    ),
+                    const SizedBox(height: 24),
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: _loadDevices,
+                        child: devices.isEmpty
+                            ? ListView(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                children: [
+                                  Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 48.0,
+                                      ),
+                                      child: Text(
+                                        'No connected devices were discovered. Try rerunning the scan or check the network connection.',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Theme.of(
+                                            context,
+                                          ).textTheme.bodyMedium?.color,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : ListView.builder(
+                                itemCount: devices.length,
+                                itemBuilder: (context, index) {
+                                  return DeviceCard(device: devices[index]);
+                                },
+                              ),
+                      ),
+                    ),
+                  ],
+                );
               },
             ),
           ),

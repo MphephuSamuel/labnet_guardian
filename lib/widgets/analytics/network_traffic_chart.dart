@@ -45,9 +45,7 @@ class NetworkTrafficChart extends StatelessWidget {
                   show: true,
                   drawVerticalLine: false,
                   getDrawingHorizontalLine: (value) => FlLine(
-                    color: isDarkMode
-                        ? Colors.white12
-                        : Colors.black12,
+                    color: isDarkMode ? Colors.white12 : Colors.black12,
                     strokeWidth: 1,
                   ),
                 ),
@@ -57,27 +55,33 @@ class NetworkTrafficChart extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       getTitlesWidget: (value, meta) {
-                        const labels = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+                        const labels = [
+                          "Mon",
+                          "Tue",
+                          "Wed",
+                          "Thu",
+                          "Fri",
+                          "Sat",
+                          "Sun",
+                        ];
                         return Text(
                           labels[value.toInt()],
-                          style: TextStyle(
-                            color: textColor,
-                            fontSize: 10,
-                          ),
+                          style: TextStyle(color: textColor, fontSize: 10),
                         );
                       },
                     ),
                   ),
 
                   leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 35,
-                    ),
+                    sideTitles: SideTitles(showTitles: true, reservedSize: 35),
                   ),
 
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                 ),
 
                 borderData: FlBorderData(show: false),

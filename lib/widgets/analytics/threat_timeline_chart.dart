@@ -44,9 +44,7 @@ class ThreatTimelineChart extends StatelessWidget {
                 gridData: FlGridData(
                   show: true,
                   getDrawingHorizontalLine: (value) => FlLine(
-                    color: isDarkMode
-                        ? Colors.white12
-                        : Colors.black12,
+                    color: isDarkMode ? Colors.white12 : Colors.black12,
                     strokeWidth: 1,
                   ),
                 ),
@@ -55,7 +53,14 @@ class ThreatTimelineChart extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       getTitlesWidget: (value, meta) {
-                        const months = ["Jan","Feb","Mar","Apr","May","Jun"];
+                        const months = [
+                          "Jan",
+                          "Feb",
+                          "Mar",
+                          "Apr",
+                          "May",
+                          "Jun",
+                        ];
                         return Text(
                           months[value.toInt()],
                           style: TextStyle(color: textColor, fontSize: 10),
@@ -66,8 +71,12 @@ class ThreatTimelineChart extends StatelessWidget {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(showTitles: true, reservedSize: 30),
                   ),
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                 ),
                 borderData: FlBorderData(show: false),
                 lineBarsData: [
@@ -84,7 +93,7 @@ class ThreatTimelineChart extends StatelessWidget {
                     color: const Color(0xFFFF4D6D),
                     barWidth: 3,
                     dotData: FlDotData(show: true),
-                  )
+                  ),
                 ],
               ),
             ),

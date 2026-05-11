@@ -267,7 +267,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   setState(() {
                                     _errorMessage = null;
                                   });
-                                  if (email.isEmpty || password.isEmpty) {
+                                  if (!AuthProvider.useMockAuth &&
+                                      (email.isEmpty || password.isEmpty)) {
                                     setState(() {
                                       _errorMessage =
                                           'Please enter email and password';

@@ -137,6 +137,12 @@ flutter pub get
 
 flutter run
 
+Or use the Windows helper script to start the backend and launch the app together:
+
+```powershell
+.\run-full-setup.ps1
+```
+
 ---
 
 ### 4. Build APK (optional)

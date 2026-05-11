@@ -9,7 +9,16 @@ import 'providers/auth_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load();
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (_) {
+    try {
+      await dotenv.load(fileName: '.env.example');
+    } catch (e) {
+      debugPrint('Could not load .env file or .env.example: $e');
+    }
+  }
+  debugPrint('Loaded environment: SCAN_API_URL=${dotenv.env['SCAN_API_URL']}');
   await Firebase.initializeApp();
   runApp(
     MultiProvider(

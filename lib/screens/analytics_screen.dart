@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 import '../utils/colors.dart';
 import '../widgets/analytics/stats_card.dart';
 import '../widgets/analytics/network_traffic_chart.dart';
 import '../widgets/analytics/bandwidth_bar_chart.dart';
 import '../widgets/analytics/threat_timeline_chart.dart';
+import '../services/network_scan_service.dart';
 import '../services/pdf_service.dart';
 
 class AnalyticsScreen extends StatefulWidget {
@@ -15,10 +18,26 @@ class AnalyticsScreen extends StatefulWidget {
 
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
   String selectedRange = "Week";
-  bool isDarkMode = false;
+  Map<String, dynamic>? _scanSummary;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadScanSummary();
+  }
+
+  Future<void> _loadScanSummary() async {
+    final result = await NetworkScanService.fetchSummary();
+    if (!mounted) return;
+    setState(() {
+      _scanSummary = result.data;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
     final bgColor = AppColors.getBgColor(isDarkMode);
     final cardColor = AppColors.getCardColor(isDarkMode);
     final textPrimary = AppColors.getTextPrimary(isDarkMode);
@@ -44,12 +63,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               isDarkMode ? Icons.dark_mode : Icons.light_mode,
               color: textPrimary,
             ),
-            onPressed: () {
-              setState(() {
-                isDarkMode = !isDarkMode;
-              });
-            },
-          )
+            onPressed: themeProvider.toggleTheme,
+          ),
         ],
       ),
 
@@ -57,7 +72,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-
             // 🔥 TIME FILTER
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -72,7 +86,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 8),
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       gradient: selected
                           ? const LinearGradient(
@@ -88,9 +104,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     child: Text(
                       range,
                       style: TextStyle(
-                        color: selected
-                            ? Colors.white
-                            : AppColors.primary,
+                        color: selected ? Colors.white : AppColors.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -111,7 +125,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               children: [
                 StatsCard(
                   title: "Avg Bandwidth",
-                  value: "428 GB",
+                  value: _scanSummary != null
+                      ? '${_scanSummary!['averageBandwidth'] ?? '428'} GB'
+                      : '428 GB',
                   change: "+12.5%",
                   icon: Icons.wifi,
                   color: AppColors.iconBlue,
@@ -119,7 +135,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 ),
                 StatsCard(
                   title: "Active Devices",
-                  value: "87",
+                  value: _scanSummary != null
+                      ? '${_scanSummary!['activeDevices'] ?? '87'}'
+                      : '87',
                   change: "+5",
                   icon: Icons.devices,
                   color: AppColors.connection,
@@ -127,7 +145,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 ),
                 StatsCard(
                   title: "Threats Blocked",
-                  value: "55",
+                  value: _scanSummary != null
+                      ? '${_scanSummary!['threatsBlocked'] ?? '55'}'
+                      : '55',
                   change: "-8",
                   icon: Icons.security,
                   color: AppColors.critical,
@@ -135,7 +155,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 ),
                 StatsCard(
                   title: "Anomalies",
-                  value: "12",
+                  value: _scanSummary != null
+                      ? '${_scanSummary!['anomalies'] ?? '12'}'
+                      : '12',
                   change: "+2",
                   icon: Icons.warning,
                   color: AppColors.warning,
@@ -147,26 +169,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             const SizedBox(height: 25),
 
             // 📊 NETWORK TRAFFIC CHART (FIXED)
-            NetworkTrafficChart(
-              range: selectedRange,
-              isDarkMode: isDarkMode,
-            ),
+            NetworkTrafficChart(range: selectedRange, isDarkMode: isDarkMode),
 
             const SizedBox(height: 25),
 
             // 📊 BANDWIDTH CHART (FIXED)
-            BandwidthBarChart(
-              range: selectedRange,
-              isDarkMode: isDarkMode,
-            ),
+            BandwidthBarChart(range: selectedRange, isDarkMode: isDarkMode),
 
             const SizedBox(height: 25),
 
             // 📊 THREAT TIMELINE CHART (FIXED)
-            ThreatTimelineChart(
-              range: selectedRange,
-              isDarkMode: isDarkMode,
-            ),
+            ThreatTimelineChart(range: selectedRange, isDarkMode: isDarkMode),
 
             const SizedBox(height: 25),
 
@@ -184,8 +197,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 14,
+                ),
               ),
             ),
 
@@ -210,16 +225,26 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  Text("• Data analysed across all time ranges.",
-                      style: TextStyle(color: textSecondary)),
-                  Text("• Bandwidth usage shows consistent growth.",
-                      style: TextStyle(color: textSecondary)),
-                  Text("• Active devices stable.",
-                      style: TextStyle(color: textSecondary)),
-                  Text("• Threat detection peaks at busy hours.",
-                      style: TextStyle(color: textSecondary)),
-                  Text("• System anomalies handled effectively.",
-                      style: TextStyle(color: textSecondary)),
+                  Text(
+                    "• Data analysed across all time ranges.",
+                    style: TextStyle(color: textSecondary),
+                  ),
+                  Text(
+                    "• Bandwidth usage shows consistent growth.",
+                    style: TextStyle(color: textSecondary),
+                  ),
+                  Text(
+                    "• Active devices stable.",
+                    style: TextStyle(color: textSecondary),
+                  ),
+                  Text(
+                    "• Threat detection peaks at busy hours.",
+                    style: TextStyle(color: textSecondary),
+                  ),
+                  Text(
+                    "• System anomalies handled effectively.",
+                    style: TextStyle(color: textSecondary),
+                  ),
                 ],
               ),
             ),

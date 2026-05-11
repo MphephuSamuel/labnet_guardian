@@ -72,7 +72,10 @@ class DeviceCard extends StatelessWidget {
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: getIconBackgroundColor(device.type, device.isSuspicious),
+                  color: getIconBackgroundColor(
+                    device.type,
+                    device.isSuspicious,
+                  ),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -118,7 +121,10 @@ class DeviceCard extends StatelessWidget {
                     if (device.isNew) ...[
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.purple.withValues(alpha: 0.8),
                           borderRadius: BorderRadius.circular(12),
@@ -138,22 +144,15 @@ class DeviceCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   '${device.ipAddress} • ${device.macAddress}',
-                  style: TextStyle(
-                    color: Colors.grey.shade500,
-                    fontSize: 13,
-                  ),
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Icon(
-                      Icons.wifi,
-                      size: 16,
-                      color: Colors.grey.shade400,
-                    ),
+                    Icon(Icons.wifi, size: 16, color: Colors.grey.shade400),
                     const SizedBox(width: 4),
                     Text(
-                      '${device.speedMBs} MB/s',
+                      device.speedText,
                       style: TextStyle(
                         color: Colors.grey.shade500,
                         fontSize: 13,
@@ -161,7 +160,10 @@ class DeviceCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 16),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: device.status == DeviceStatus.active
                             ? Colors.green.withValues(alpha: 0.15)
