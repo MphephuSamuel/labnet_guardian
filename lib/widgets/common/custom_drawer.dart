@@ -6,6 +6,7 @@ import '../../screens/profile_screen.dart';
 import '../../screens/settings_screen.dart';
 import '../../screens/login_screen.dart';
 import '../../screens/analytics_screen.dart';
+import '../../screens/help&support.dart';
 
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({super.key});
@@ -195,6 +196,15 @@ class CustomDrawer extends StatelessWidget {
                     iconBgColor: const Color(0xFFEC4899).withValues(alpha: 0.1),
                     iconColor: const Color(0xFFEC4899),
                     textColor: textColor,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HelpSupportScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
