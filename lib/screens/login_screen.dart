@@ -17,7 +17,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
-  String? _token; // Add a variable to store the token
 
   @override
   void dispose() {
@@ -244,73 +243,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
 
-                    // ── Token Display ──
-                    if (authProvider.isAuthenticated && authProvider.token != null)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16.0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                'Token: ${authProvider.token}',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Color(0xFF1A1A2E),
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.copy, color: Color(0xFF7B2FBE)),
-                              onPressed: () {
-                                Clipboard.setData(
-                                  ClipboardData(text: authProvider.token!),
-                                );
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Token copied to clipboard!'),
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-
-                    // ── Redirect Button ──
-                    if (authProvider.isAuthenticated && authProvider.token != null)
-                      SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const BiometricScreen(),
-                              ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF7B2FBE),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(50),
-                            ),
-                          ),
-                          child: const Text(
-                            'Redirect',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-
                     // ── Login Button or Loading ──
-                    if (!authProvider.isAuthenticated)
-                      SizedBox(
+                    SizedBox(
                         width: double.infinity,
                         height: 52,
                         child: DecoratedBox(
@@ -352,9 +286,17 @@ class _LoginScreenState extends State<LoginScreen> {
                                         email,
                                         password,
                                       );
-                                      setState(() {
-                                        _isLoading = false;
-                                      });
+                                      if (mounted) {
+                                        setState(() {
+                                          _isLoading = false;
+                                        });
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => const BiometricScreen(),
+                                          ),
+                                        );
+                                      }
                                     } catch (e) {
                                       setState(() {
                                         _isLoading = false;
