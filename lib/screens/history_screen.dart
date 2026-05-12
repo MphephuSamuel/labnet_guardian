@@ -51,109 +51,24 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
   }
 
   Future<void> _loadHistory({String query = ''}) async {
-    setState(() { _isLoading = true; _error = null; });
-    
-    // Mockup data for demonstration
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (!mounted) return;
-    
-    final mockHistory = [
-      HistoryItem(
-        id: '1',
-        title: 'Device connected to network',
-        device: 'LAB-PC-001',
-        ip: '192.168.1.45',
-        time: '09:45 AM',
-        dateGroup: 'Today',
-        type: HistoryType.connection,
-      ),
-      HistoryItem(
-        id: '2',
-        title: 'Security scan completed',
-        device: 'SYSTEM',
-        ip: '192.168.1.1',
-        time: '09:30 AM',
-        dateGroup: 'Today',
-        type: HistoryType.scan,
-      ),
-      HistoryItem(
-        id: '3',
-        title: 'Anomaly detected in traffic patterns',
-        device: 'IOT-SENSOR-01',
-        ip: '192.168.1.112',
-        time: '08:15 AM',
-        dateGroup: 'Today',
-        type: HistoryType.anomaly,
-      ),
-      HistoryItem(
-        id: '4',
-        title: 'Device disconnected from network',
-        device: 'PHONE-CS-023',
-        ip: '192.168.1.92',
-        time: '07:55 AM',
-        dateGroup: 'Today',
-        type: HistoryType.disconnection,
-      ),
-      HistoryItem(
-        id: '5',
-        title: 'System update installed',
-        device: 'LAB-PC-002',
-        ip: '192.168.1.46',
-        time: '06:30 AM',
-        dateGroup: 'Today',
-        type: HistoryType.update,
-      ),
-      HistoryItem(
-        id: '6',
-        title: 'New device joined network',
-        device: 'TABLET-ENG-015',
-        ip: '192.168.1.78',
-        time: 'Yesterday',
-        dateGroup: 'Yesterday',
-        type: HistoryType.connection,
-      ),
-      HistoryItem(
-        id: '7',
-        title: 'Firewall rules updated',
-        device: 'SYSTEM',
-        ip: '192.168.1.1',
-        time: 'Yesterday',
-        dateGroup: 'Yesterday',
-        type: HistoryType.update,
-      ),
-      HistoryItem(
-        id: '8',
-        title: 'Network scan initiated',
-        device: 'SYSTEM',
-        ip: '192.168.1.1',
-        time: 'Yesterday',
-        dateGroup: 'Yesterday',
-        type: HistoryType.scan,
-      ),
-      HistoryItem(
-        id: '9',
-        title: 'Device left network',
-        device: 'PHONE-ENG-04',
-        ip: '192.168.1.95',
-        time: '2 days ago',
-        dateGroup: '2 days ago',
-        type: HistoryType.disconnection,
-      ),
-      HistoryItem(
-        id: '10',
-        title: 'Suspicious activity blocked',
-        device: 'FIREWALL',
-        ip: '192.168.1.1',
-        time: '2 days ago',
-        dateGroup: '2 days ago',
-        type: HistoryType.anomaly,
-      ),
-    ];
-    
     setState(() {
-      _isLoading = false;
-      _items = mockHistory;
+      _isLoading = true;
+      _error = null;
     });
+    try {
+      final histories = await HistoryService().fetchHistories(query: query);
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _items = histories;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _error = e.toString();
+      });
+    }
   }
 
   List<HistoryItem> get _displayed => _items;
@@ -175,8 +90,10 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
   }
 
   void _openProfile(BuildContext context) {
-    Navigator.push(context,
-        MaterialPageRoute(builder: (_) => const ProfileScreen()));
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ProfileScreen()),
+    );
   }
 
   @override
@@ -188,8 +105,8 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme   = Provider.of<ThemeProvider>(context);
-    final isDark  = theme.isDarkMode;
+    final theme = Provider.of<ThemeProvider>(context);
+    final isDark = theme.isDarkMode;
     final bgColor = AppColors.getBgColor(isDark);
     final cardColor = AppColors.getCardColor(isDark);
     final textColor = AppColors.getTextPrimary(isDark);
@@ -209,11 +126,15 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   children: [
                     const SizedBox(height: 8),
-                    Text('Activity History',
-                        style: TextStyle(
-                          color: textColor, fontSize: 26,
-                          fontWeight: FontWeight.w800, letterSpacing: -0.5,
-                        )),
+                    Text(
+                      'Activity History',
+                      style: TextStyle(
+                        color: textColor,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
                     const SizedBox(height: 20),
                     _searchBar(isDark, subColor, cardColor, textColor),
                     const SizedBox(height: 20),
@@ -225,20 +146,29 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
                       _emptyState(subColor)
                     else
                       for (final group in _groupOrder) ...[
-                        Text(group,
-                            style: TextStyle(
-                              color: subColor, fontSize: 13,
-                              fontWeight: FontWeight.w600, letterSpacing: 0.2,
-                            )),
+                        Text(
+                          group,
+                          style: TextStyle(
+                            color: subColor,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
                         const SizedBox(height: 12),
-                        ..._grouped[group]!.map((item) => Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: _historyCard(
-                                isDark: isDark, cardColor: cardColor,
-                                textColor: textColor, subColor: subColor,
-                                item: item, query: _query,
-                              ),
-                            )),
+                        ..._grouped[group]!.map(
+                          (item) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _historyCard(
+                              isDark: isDark,
+                              cardColor: cardColor,
+                              textColor: textColor,
+                              subColor: subColor,
+                              item: item,
+                              query: _query,
+                            ),
+                          ),
+                        ),
                         const SizedBox(height: 8),
                       ],
                     const SizedBox(height: 8),
@@ -253,7 +183,12 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
   }
 
   // ── Top bar ────────────────────────────────────────────────────────────────
-  Widget _topBar(bool isDark, ThemeProvider theme, Color textColor, BuildContext ctx) {
+  Widget _topBar(
+    bool isDark,
+    ThemeProvider theme,
+    Color textColor,
+    BuildContext ctx,
+  ) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       child: Row(
@@ -262,20 +197,29 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
           const Spacer(),
           _circleBtn(
             isDark ? Icons.wb_sunny_outlined : Icons.nightlight_round_outlined,
-            isDark, textColor, onTap: theme.toggleTheme,
+            isDark,
+            textColor,
+            onTap: theme.toggleTheme,
           ),
           const SizedBox(width: 10),
           // Notification bell → jump to Alerts tab via nav
           Stack(
             children: [
-              _circleBtn(Icons.notifications_outlined, isDark, textColor,
-                  onTap: () => _jumpToAlerts(ctx)),
+              _circleBtn(
+                Icons.notifications_outlined,
+                isDark,
+                textColor,
+                onTap: () => _jumpToAlerts(ctx),
+              ),
               Positioned(
-                right: 8, top: 8,
+                right: 8,
+                top: 8,
                 child: Container(
-                  width: 8, height: 8,
+                  width: 8,
+                  height: 8,
                   decoration: const BoxDecoration(
-                    color: AppColors.critical, shape: BoxShape.circle,
+                    color: AppColors.critical,
+                    shape: BoxShape.circle,
                   ),
                 ),
               ),
@@ -286,17 +230,21 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
           GestureDetector(
             onTap: () => _openProfile(ctx),
             child: Container(
-              width: 40, height: 40,
+              width: 40,
+              height: 40,
               decoration: const BoxDecoration(
-                color: AppColors.gradientStart, shape: BoxShape.circle,
+                color: AppColors.gradientStart,
+                shape: BoxShape.circle,
               ),
               child: const Center(
-                child: Text('A',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                    )),
+                child: Text(
+                  'A',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
+                ),
               ),
             ),
           ),
@@ -311,17 +259,24 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
     nav?.jumpTo(2);
   }
 
-  Widget _circleBtn(IconData icon, bool isDark, Color color, {VoidCallback? onTap}) {
+  Widget _circleBtn(
+    IconData icon,
+    bool isDark,
+    Color color, {
+    VoidCallback? onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 40, height: 40,
+        width: 40,
+        height: 40,
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkCard : AppColors.lightCard,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06), blurRadius: 8,
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
+              blurRadius: 8,
             ),
           ],
         ),
@@ -331,14 +286,22 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
   }
 
   // ── Search bar ─────────────────────────────────────────────────────────────
-  Widget _searchBar(bool isDark, Color subColor, Color cardColor, Color textColor) {
+  Widget _searchBar(
+    bool isDark,
+    Color subColor,
+    Color cardColor,
+    Color textColor,
+  ) {
     return Container(
       height: 50,
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05), blurRadius: 8),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+            blurRadius: 8,
+          ),
         ],
       ),
       child: Row(
@@ -360,7 +323,11 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
           ),
           if (_query.isNotEmpty)
             GestureDetector(
-              onTap: () { _searchCtrl.clear(); setState(() => _query = ''); _loadHistory(); },
+              onTap: () {
+                _searchCtrl.clear();
+                setState(() => _query = '');
+                _loadHistory();
+              },
               child: Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: Icon(Icons.close_rounded, color: subColor, size: 18),
@@ -376,11 +343,19 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 60),
       child: Center(
-        child: Column(children: [
-          CircularProgressIndicator(color: AppColors.gradientStart, strokeWidth: 2.5),
-          const SizedBox(height: 16),
-          Text('Loading history…', style: TextStyle(color: subColor, fontSize: 14)),
-        ]),
+        child: Column(
+          children: [
+            CircularProgressIndicator(
+              color: AppColors.gradientStart,
+              strokeWidth: 2.5,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Loading history…',
+              style: TextStyle(color: subColor, fontSize: 14),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -395,22 +370,42 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.critical.withValues(alpha: 0.25)),
         ),
-        child: Column(children: [
-          Icon(Icons.cloud_off_rounded, color: AppColors.critical.withValues(alpha: 0.7), size: 44),
-          const SizedBox(height: 12),
-          Text(_error!, textAlign: TextAlign.center,
-              style: TextStyle(color: subColor, fontSize: 13, height: 1.5)),
-          const SizedBox(height: 16),
-          GestureDetector(
-            onTap: () => _loadHistory(query: _query),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(color: AppColors.gradientStart, borderRadius: BorderRadius.circular(20)),
-              child: const Text('Retry',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+        child: Column(
+          children: [
+            Icon(
+              Icons.cloud_off_rounded,
+              color: AppColors.critical.withValues(alpha: 0.7),
+              size: 44,
             ),
-          ),
-        ]),
+            const SizedBox(height: 12),
+            Text(
+              _error!,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: subColor, fontSize: 13, height: 1.5),
+            ),
+            const SizedBox(height: 16),
+            GestureDetector(
+              onTap: () => _loadHistory(query: _query),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.gradientStart,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Text(
+                  'Retry',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -419,12 +414,22 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 60),
       child: Center(
-        child: Column(children: [
-          Icon(Icons.search_off_rounded, color: subColor.withValues(alpha: 0.4), size: 56),
-          const SizedBox(height: 16),
-          Text(_query.isEmpty ? 'No activity recorded yet' : 'No results for "$_query"',
-              style: TextStyle(color: subColor, fontSize: 15)),
-        ]),
+        child: Column(
+          children: [
+            Icon(
+              Icons.search_off_rounded,
+              color: subColor.withValues(alpha: 0.4),
+              size: 56,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _query.isEmpty
+                  ? 'No activity recorded yet'
+                  : 'No results for "$_query"',
+              style: TextStyle(color: subColor, fontSize: 15),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -438,8 +443,10 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
     required HistoryItem item,
     required String query,
   }) {
-    final type   = item.type;
-    final iconBg = isDark ? type.color.withValues(alpha: 0.15) : type.color.withValues(alpha: 0.12);
+    final type = item.type;
+    final iconBg = isDark
+        ? type.color.withValues(alpha: 0.15)
+        : type.color.withValues(alpha: 0.12);
     final badgeBg = iconBg;
 
     return Container(
@@ -450,7 +457,8 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
-            blurRadius: 10, offset: const Offset(0, 2),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -458,48 +466,95 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 44, height: 44,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
             child: Icon(type.icon, color: type.color, size: 22),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              _highlight(item.title, query, textColor,
-                  fontWeight: FontWeight.w700, fontSize: 15),
-              const SizedBox(height: 4),
-              _highlight('${item.device} • ${item.ip}', query, subColor, fontSize: 12),
-              const SizedBox(height: 8),
-              Text(item.time, style: TextStyle(color: subColor, fontSize: 12)),
-            ]),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _highlight(
+                  item.title,
+                  query,
+                  textColor,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
+                const SizedBox(height: 4),
+                _highlight(
+                  '${item.device} • ${item.ip}',
+                  query,
+                  subColor,
+                  fontSize: 12,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  item.time,
+                  style: TextStyle(color: subColor, fontSize: 12),
+                ),
+              ],
+            ),
           ),
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(color: badgeBg, borderRadius: BorderRadius.circular(20)),
-            child: Text(type.label,
-                style: TextStyle(color: type.color, fontSize: 11, fontWeight: FontWeight.w600)),
+            decoration: BoxDecoration(
+              color: badgeBg,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              type.label,
+              style: TextStyle(
+                color: type.color,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _highlight(String text, String query, Color baseColor,
-      {FontWeight fontWeight = FontWeight.w400, double fontSize = 14}) {
+  Widget _highlight(
+    String text,
+    String query,
+    Color baseColor, {
+    FontWeight fontWeight = FontWeight.w400,
+    double fontSize = 14,
+  }) {
     if (query.isEmpty) {
-      return Text(text,
-          style: TextStyle(color: baseColor, fontWeight: fontWeight, fontSize: fontSize));
+      return Text(
+        text,
+        style: TextStyle(
+          color: baseColor,
+          fontWeight: fontWeight,
+          fontSize: fontSize,
+        ),
+      );
     }
     final lower = text.toLowerCase();
-    final idx   = lower.indexOf(query);
+    final idx = lower.indexOf(query);
     if (idx == -1) {
-      return Text(text,
-          style: TextStyle(color: baseColor, fontWeight: fontWeight, fontSize: fontSize));
+      return Text(
+        text,
+        style: TextStyle(
+          color: baseColor,
+          fontWeight: fontWeight,
+          fontSize: fontSize,
+        ),
+      );
     }
     return RichText(
       text: TextSpan(
-        style: TextStyle(color: baseColor, fontWeight: fontWeight, fontSize: fontSize),
+        style: TextStyle(
+          color: baseColor,
+          fontWeight: fontWeight,
+          fontSize: fontSize,
+        ),
         children: [
           TextSpan(text: text.substring(0, idx)),
           TextSpan(
@@ -516,4 +571,3 @@ class _ActivityHistoryScreenState extends State<ActivityHistoryScreen> {
     );
   }
 }
-

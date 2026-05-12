@@ -16,6 +16,9 @@ class AuthService {
       if (user != null) {
         String? token = await user.getIdToken();
         await _storage.write(key: 'firebase_id_token', value: token);
+        // Store credentials for biometric login
+        await _storage.write(key: 'email', value: email);
+        await _storage.write(key: 'password', value: password);
       }
       return user;
     } catch (e) {
@@ -32,5 +35,29 @@ class AuthService {
   // Get stored token
   Future<String?> getToken() async {
     return await _storage.read(key: 'firebase_id_token');
+  }
+
+  // Get stored email
+  Future<String?> getStoredEmail() async {
+    return await _storage.read(key: 'email');
+  }
+
+  // Get stored password
+  Future<String?> getStoredPassword() async {
+    return await _storage.read(key: 'password');
+  }
+
+  // Sign in with stored credentials (for biometric)
+  Future<User?> signInWithStoredCredentials() async {
+    try {
+      String? email = await getStoredEmail();
+      String? password = await getStoredPassword();
+      if (email != null && password != null) {
+        return await signIn(email, password);
+      }
+      return null;
+    } catch (e) {
+      rethrow;
+    }
   }
 }

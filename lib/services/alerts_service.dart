@@ -1,101 +1,37 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../models/alert.dart';
+import 'api_client.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// CONFIG — swap baseUrl to your real backend when ready
-// ─────────────────────────────────────────────────────────────────────────────
-class ApiConfig {
-  /// Change this to your backend base URL, e.g.
-  ///   'http://192.168.1.10:8000'   (local dev)
-  ///   'https://api.mynetwork.com'  (production)
-  static const String baseUrl = 'http://YOUR_BACKEND_URL';
-
-  /// Add auth headers here once your backend requires them, e.g.
-  ///   'Authorization': 'Bearer $token'
-  static Map<String, String> get headers => {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        // 'Authorization': 'Bearer YOUR_TOKEN',
-      };
-
-  static Duration get timeout => const Duration(seconds: 15);
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// RESULT WRAPPER — every API call returns ApiResult<T>
-// ─────────────────────────────────────────────────────────────────────────────
-class ApiResult<T> {
-  final T? data;
-  final String? error;
-  final bool isLoading;
-
-  const ApiResult.loading() : data = null, error = null, isLoading = true;
-  const ApiResult.success(this.data) : error = null, isLoading = false;
-  const ApiResult.failure(this.error) : data = null, isLoading = false;
-
-  bool get hasData => data != null;
-  bool get hasError => error != null;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// API SERVICE
-// ─────────────────────────────────────────────────────────────────────────────
-class ApiService {
-  // ── Shared HTTP helper ────────────────────────────────────────────────────
-  static Future<http.Response> _get(String path) {
-    return http
-        .get(
-          Uri.parse('${ApiConfig.baseUrl}$path'),
-          headers: ApiConfig.headers,
-        )
-        .timeout(ApiConfig.timeout);
-  }
-
-  // ── ALERTS ───────────────────────────────────────────────────────────────
-  /// GET /api/alerts
-  /// Expected JSON: [ { "id", "title", "description", "device", "ip",
-  ///                    "time", "severity": "critical"|"warning"|"info" } ]
-  static Future<ApiResult<List<AlertItem>>> fetchAlerts() async {
+class AlertService {
+  Future<List<AlertItem>> fetchAlerts() async {
+    final res = await ApiClient.get('/api/alerts');
+    if (res.statusCode != 200) {
+      print('AlertService.fetchAlerts failed: ${res.statusCode} ${res.body}');
+      throw Exception('Failed to load alerts');
+    }
     try {
-      final res = await _get('/api/alerts');
-      if (res.statusCode == 200) {
-        final List<dynamic> json = jsonDecode(res.body);
-        final items = json.map((j) => AlertItem.fromJson(j)).toList();
-        return ApiResult.success(items);
-      }
-      return ApiResult.failure('Server error ${res.statusCode}');
+      final List data = jsonDecode(res.body);
+      return data.map((e) => AlertItem.fromJson(e)).toList();
     } catch (e) {
-      return ApiResult.failure(_friendlyError(e));
+      print('AlertService.fetchAlerts JSON decode error: $e');
+      rethrow;
     }
   }
 
-  /// GET /api/alerts?severity=critical|warning|info
-  static Future<ApiResult<List<AlertItem>>> fetchAlertsBySeverity(
-      String severity) async {
+  Future<List<AlertItem>> fetchBySeverity(String severity) async {
+    final res = await ApiClient.get('/api/alerts?severity=$severity');
+    if (res.statusCode != 200) {
+      print(
+        'AlertService.fetchBySeverity failed: ${res.statusCode} ${res.body}',
+      );
+      throw Exception('Failed to load alerts');
+    }
     try {
-      final res = await _get('/api/alerts?severity=$severity');
-      if (res.statusCode == 200) {
-        final List<dynamic> json = jsonDecode(res.body);
-        return ApiResult.success(
-            json.map((j) => AlertItem.fromJson(j)).toList());
-      }
-      return ApiResult.failure('Server error ${res.statusCode}');
+      final List data = jsonDecode(res.body);
+      return data.map((e) => AlertItem.fromJson(e)).toList();
     } catch (e) {
-      return ApiResult.failure(_friendlyError(e));
+      print('AlertService.fetchBySeverity JSON decode error: $e');
+      rethrow;
     }
-  }
-
-  static String _friendlyError(Object e) {
-    final msg = e.toString();
-    if (msg.contains('SocketException') ||
-        msg.contains('Connection refused') ||
-        msg.contains('Network')) {
-      return 'Cannot reach the server. Check your connection or backend URL.';
-    }
-    if (msg.contains('TimeoutException')) {
-      return 'Request timed out. The server is not responding.';
-    }
-    return 'Unexpected error: $msg';
   }
 }

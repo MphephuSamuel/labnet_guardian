@@ -1,8 +1,73 @@
-import 'package:flutter/material.dart';
-import 'authentication_screen.dart';
 
-class BiometricScreen extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:local_auth/local_auth.dart';
+import '../services/biometric_service.dart';
+import '../screens/authentication_screen.dart';
+import '../layout/main_layout.dart';
+
+class BiometricScreen extends StatefulWidget {
   const BiometricScreen({super.key});
+
+  @override
+  State<BiometricScreen> createState() => _BiometricScreenState();
+}
+
+class _BiometricScreenState extends State<BiometricScreen> {
+  final BiometricService _biometricService = BiometricService();
+  bool _isLoading = false;
+  String? _errorMessage;
+  List<BiometricType> _availableBiometrics = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAvailableBiometrics();
+  }
+
+  Future<void> _loadAvailableBiometrics() async {
+    final biometrics = await _biometricService.getAvailableBiometrics();
+    if (mounted) {
+      setState(() => _availableBiometrics = biometrics);
+    }
+  }
+
+  bool get _hasFaceID => _availableBiometrics.contains(BiometricType.face);
+  bool get _hasFingerprint =>
+      _availableBiometrics.contains(BiometricType.fingerprint) ||
+      _availableBiometrics.contains(BiometricType.strong);
+
+  Future<void> _authenticate() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final BiometricResult result =
+        await _biometricService.authenticateWithBiometrics();
+
+    if (!mounted) return;
+
+    setState(() => _isLoading = false);
+
+    if (result.success) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const AuthSuccessScreen()),
+      );
+    } else {
+      setState(() {
+        _errorMessage =
+            result.errorMessage ?? 'Biometric authentication failed';
+      });
+    }
+  }
+
+  void _skip() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const MainLayout(initialIndex: 0)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +82,7 @@ class BiometricScreen extends StatelessWidget {
             children: [
               const Spacer(),
 
-              // ── Fingerprint Icon Circle ──
+              // ── Icon: shows face or fingerprint based on availability ──
               Container(
                 width: 160,
                 height: 160,
@@ -36,8 +101,12 @@ class BiometricScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Icon(
-                  Icons.fingerprint,
+                child: Icon(
+                  _hasFaceID && _hasFingerprint
+                      ? Icons.security
+                      : _hasFaceID
+                          ? Icons.face_retouching_natural
+                          : Icons.fingerprint,
                   size: 90,
                   color: Colors.white,
                 ),
@@ -72,62 +141,67 @@ class BiometricScreen extends StatelessWidget {
 
               const Spacer(),
 
-              // ── Authenticate Button ──
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF8B3DCA), Color(0xFFE91E8C)],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const AuthSuccessScreen(),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(50),
-                      ),
-                    ),
-                    child: const Text(
-                      'Authenticate with Biometrics',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+              // ── Error Message ──
+              if (_errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    _errorMessage!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Colors.redAccent,
                     ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 14),
+              // ── Fingerprint Button (shown if available) ──
+              if (_hasFingerprint) ...[
+                _buildGradientButton(
+                  icon: Icons.fingerprint,
+                  label: 'Use Fingerprint',
+                  onPressed: _isLoading ? null : _authenticate,
+                ),
+                const SizedBox(height: 14),
+              ],
+
+              // ── Face ID Button (shown if available) ──
+              if (_hasFaceID) ...[
+                _buildGradientButton(
+                  icon: Icons.face_retouching_natural,
+                  label: 'Use Face ID',
+                  onPressed: _isLoading ? null : _authenticate,
+                ),
+                const SizedBox(height: 14),
+              ],
+
+              // ── Fallback if no biometrics detected yet ──
+              if (!_hasFingerprint && !_hasFaceID) ...[
+                _buildGradientButton(
+                  icon: Icons.security,
+                  label: 'Authenticate with Biometrics',
+                  onPressed: _isLoading ? null : _authenticate,
+                ),
+                const SizedBox(height: 14),
+              ],
+
+              // ── Loading indicator ──
+              if (_isLoading)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 14),
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFF9B59B6),
+                    ),
+                  ),
+                ),
 
               // ── Skip for Now Button ──
               SizedBox(
                 width: double.infinity,
                 height: 54,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const AuthSuccessScreen(),
-                      ),
-                    );
-                  },
+                  onPressed: _isLoading ? null : _skip,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     shadowColor: Colors.transparent,
@@ -149,6 +223,46 @@ class BiometricScreen extends StatelessWidget {
 
               const SizedBox(height: 40),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGradientButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback? onPressed,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 54,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF8B3DCA), Color(0xFFE91E8C)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(50),
+        ),
+        child: ElevatedButton.icon(
+          onPressed: onPressed,
+          icon: Icon(icon, color: Colors.white),
+          label: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(50),
+            ),
           ),
         ),
       ),

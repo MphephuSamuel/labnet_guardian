@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../layout/main_layout.dart';
+import '../providers/auth_provider.dart';
 
 class AuthSuccessScreen extends StatefulWidget {
   const AuthSuccessScreen({super.key});
@@ -18,6 +20,13 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen>
   void initState() {
     super.initState();
 
+    // Retrieve and print the token for debugging purposes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      authProvider.loadToken(); // Load the token to ensure it is available
+      debugPrint('Token: ${authProvider.token}');
+    });
+
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 700),
@@ -28,10 +37,7 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen>
       curve: Curves.elasticOut,
     );
 
-    _fadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeIn,
-    );
+    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
 
     _controller.forward();
 
@@ -54,6 +60,8 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen>
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+
     return Scaffold(
       backgroundColor: const Color(0xFFEFEEF8),
       body: SafeArea(
@@ -78,7 +86,9 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen>
                       ),
                       boxShadow: [
                         BoxShadow(
-                              color: const Color(0xFF2EAD60).withValues(alpha: 0.35),
+                          color: const Color(
+                            0xFF2EAD60,
+                          ).withValues(alpha: 0.35),
                           blurRadius: 40,
                           offset: const Offset(0, 16),
                         ),
@@ -111,11 +121,9 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen>
                 // ── Subtitle ──
                 const Text(
                   'Redirecting to dashboard...',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF9E9EB8),
-                  ),
+                  style: TextStyle(fontSize: 14, color: Color(0xFF9E9EB8)),
                 ),
+
               ],
             ),
           ),
