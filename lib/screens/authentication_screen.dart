@@ -124,17 +124,6 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen>
                   style: TextStyle(fontSize: 14, color: Color(0xFF9E9EB8)),
                 ),
 
-                const SizedBox(height: 14),
-
-                // Display the token
-                if (authProvider.token != null)
-                  Text(
-                    'Token: ${authProvider.token}',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF1A1A2E),
-                    ),
-                  ),
               ],
             ),
           ),
