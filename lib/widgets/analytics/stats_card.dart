@@ -7,7 +7,7 @@ class StatsCard extends StatelessWidget {
   final String change;
   final IconData icon;
   final Color color;
-  final bool isDarkMode; // 🔥 NEW
+  final bool isDarkMode;
 
   const StatsCard({
     super.key,
@@ -16,12 +16,12 @@ class StatsCard extends StatelessWidget {
     required this.change,
     required this.icon,
     required this.color,
-    required this.isDarkMode, // 🔥 REQUIRED
+    required this.isDarkMode,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isNegative = change.contains('-');
+    final isNegative = change.startsWith('-');
 
     final cardColor = AppColors.getCardColor(isDarkMode);
     final textPrimary = AppColors.getTextPrimary(isDarkMode);
@@ -30,15 +30,15 @@ class StatsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: cardColor, // ✅ dynamic
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             blurRadius: 6,
-            color: isDarkMode
-                ? Colors.black.withOpacity(0.3)
-                : Colors.black12,
             offset: const Offset(0, 3),
+            color: isDarkMode
+                ? Colors.black.withOpacity(0.35)
+                : Colors.black12,
           )
         ],
       ),
@@ -54,24 +54,30 @@ class StatsCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: textPrimary, // ✅ dynamic
+              color: textPrimary,
             ),
           ),
 
+          const SizedBox(height: 4),
+
           Text(
             title,
-            style: TextStyle(color: textSecondary), // ✅ dynamic
+            style: TextStyle(
+              fontSize: 13,
+              color: textSecondary,
+            ),
           ),
 
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
 
           Text(
             change,
             style: TextStyle(
               color: isNegative
                   ? AppColors.critical
-                  : AppColors.connection, // ✅ use your system
+                  : AppColors.connection,
               fontWeight: FontWeight.w600,
+              fontSize: 12,
             ),
           ),
         ],

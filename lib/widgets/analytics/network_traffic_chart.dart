@@ -5,17 +5,28 @@ import '../../utils/colors.dart';
 class NetworkTrafficChart extends StatelessWidget {
   final String range;
   final bool isDarkMode;
+  final List<double>? trafficData;
 
   const NetworkTrafficChart({
     super.key,
     required this.range,
     required this.isDarkMode,
+    this.trafficData,
   });
 
   @override
   Widget build(BuildContext context) {
     final cardColor = AppColors.getCardColor(isDarkMode);
     final textColor = AppColors.getTextPrimary(isDarkMode);
+
+    final data = trafficData ?? [];
+
+    final spots = data.isEmpty
+        ? <FlSpot>[]
+        : List.generate(
+            data.length,
+            (i) => FlSpot(i.toDouble(), data[i]),
+          );
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -34,7 +45,6 @@ class NetworkTrafficChart extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-
           const SizedBox(height: 20),
 
           SizedBox(
@@ -45,9 +55,7 @@ class NetworkTrafficChart extends StatelessWidget {
                   show: true,
                   drawVerticalLine: false,
                   getDrawingHorizontalLine: (value) => FlLine(
-                    color: isDarkMode
-                        ? Colors.white12
-                        : Colors.black12,
+                    color: isDarkMode ? Colors.white12 : Colors.black12,
                     strokeWidth: 1,
                   ),
                 ),
@@ -57,59 +65,54 @@ class NetworkTrafficChart extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       getTitlesWidget: (value, meta) {
-                        const labels = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+                        const labels = [
+                          "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"
+                        ];
                         return Text(
-                          labels[value.toInt()],
-                          style: TextStyle(
-                            color: textColor,
-                            fontSize: 10,
-                          ),
+                          labels[value.toInt() % labels.length],
+                          style: TextStyle(color: textColor, fontSize: 10),
                         );
                       },
                     ),
                   ),
-
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 35,
                     ),
                   ),
-
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                 ),
 
                 borderData: FlBorderData(show: false),
 
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: const [
-                      FlSpot(0, 2),
-                      FlSpot(1, 4),
-                      FlSpot(2, 3),
-                      FlSpot(3, 6),
-                      FlSpot(4, 5),
-                      FlSpot(5, 7),
-                      FlSpot(6, 5),
-                    ],
-                    isCurved: true,
-                    color: const Color(0xFF6C63FF),
-                    barWidth: 3,
-                    dotData: FlDotData(show: true),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      gradient: LinearGradient(
-                        colors: [
-                          const Color(0xFF6C63FF).withOpacity(0.3),
-                          Colors.transparent,
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
-                    ),
-                  ),
-                ],
+                lineBarsData: spots.isEmpty
+                    ? []
+                    : [
+                        LineChartBarData(
+                          spots: spots,
+                          isCurved: true,
+                          color: const Color(0xFF6C63FF),
+                          barWidth: 3,
+                          dotData: FlDotData(show: true),
+                          belowBarData: BarAreaData(
+                            show: true,
+                            gradient: LinearGradient(
+                              colors: [
+                                const Color(0xFF6C63FF).withOpacity(0.3),
+                                Colors.transparent,
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                          ),
+                        ),
+                      ],
               ),
             ),
           ),

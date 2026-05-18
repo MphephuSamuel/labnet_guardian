@@ -2,156 +2,228 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
-
 class PdfService {
   static Future<void> generateAdvancedReport({
     required String range,
+    required Map<String, dynamic>? bandwidthData,
+    required List<dynamic> threats,
+    required List<dynamic> anomalies,
   }) async {
     final pdf = pw.Document();
 
+    final averageBandwidth =
+        bandwidthData?["averageBandwidth"] ?? 0;
+
+    final activeDevices =
+        bandwidthData?["activeDevices"] ?? 0;
+
+    final traffic =
+        List<dynamic>.from(bandwidthData?["traffic"] ?? []);
+
+    final bandwidth =
+        List<dynamic>.from(bandwidthData?["bandwidth"] ?? []);
+
+    final threatTimeline =
+        List<dynamic>.from(bandwidthData?["threats"] ?? []);
+
     pdf.addPage(
       pw.MultiPage(
+        pageTheme: const pw.PageTheme(
+          margin: pw.EdgeInsets.all(24),
+        ),
+
         build: (context) => [
 
-          // 🔷 TITLE
+          // ================= TITLE =================
           pw.Text(
             "LabNet Guardian Analytics Report",
             style: pw.TextStyle(
-              fontSize: 24,
+              fontSize: 26,
+              fontWeight: pw.FontWeight.bold,
+            ),
+          ),
+
+          pw.SizedBox(height: 8),
+
+          pw.Text(
+            "Time Range: $range",
+            style: const pw.TextStyle(fontSize: 14),
+          ),
+
+          pw.Divider(),
+
+          pw.SizedBox(height: 20),
+
+          // ================= KPI SECTION =================
+          pw.Text(
+            "Key Performance Indicators",
+            style: pw.TextStyle(
+              fontSize: 18,
+              fontWeight: pw.FontWeight.bold,
+            ),
+          ),
+
+          pw.SizedBox(height: 15),
+
+          pw.Table(
+            border: pw.TableBorder.all(
+              color: PdfColors.grey300,
+              width: 1,
+            ),
+
+            children: [
+
+              _tableRow(
+                "Average Bandwidth",
+                "$averageBandwidth GB",
+              ),
+
+              _tableRow(
+                "Active Devices",
+                "$activeDevices",
+              ),
+
+              _tableRow(
+                "Threats Blocked",
+                "${threats.length}",
+              ),
+
+              _tableRow(
+                "Anomalies Detected",
+                "${anomalies.length}",
+              ),
+            ],
+          ),
+
+          pw.SizedBox(height: 30),
+
+          // ================= NETWORK TRAFFIC =================
+          pw.Text(
+            "Network Traffic Data",
+            style: pw.TextStyle(
+              fontSize: 18,
               fontWeight: pw.FontWeight.bold,
             ),
           ),
 
           pw.SizedBox(height: 10),
-          pw.Text("Time Range: $range"),
-          pw.Text("Generated: ${DateTime.now()}"),
 
-          pw.Divider(),
+          traffic.isEmpty
+              ? pw.Text("No traffic data available.")
+              : pw.Column(
+                  children: traffic
+                      .asMap()
+                      .entries
+                      .map(
+                        (e) => pw.Text(
+                          "Day ${e.key + 1}: ${e.value}",
+                        ),
+                      )
+                      .toList(),
+                ),
 
-          // 📊 KPI SECTION
-          pw.Header(level: 1, text: "Key Metrics"),
+          pw.SizedBox(height: 25),
 
-          pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-            children: [
-              _kpiBox("Bandwidth", "428 GB"),
-              _kpiBox("Devices", "87"),
-              _kpiBox("Threats", "55"),
-              _kpiBox("Anomalies", "12"),
-            ],
+          // ================= BANDWIDTH =================
+          pw.Text(
+            "Bandwidth Usage Data",
+            style: pw.TextStyle(
+              fontSize: 18,
+              fontWeight: pw.FontWeight.bold,
+            ),
           ),
 
-          pw.SizedBox(height: 20),
+          pw.SizedBox(height: 10),
 
-          // 📈 NETWORK TRAFFIC CHART (REAL DRAWN)
-          pw.Header(level: 1, text: "Network Traffic"),
+          bandwidth.isEmpty
+              ? pw.Text("No bandwidth data available.")
+              : pw.Column(
+                  children: bandwidth
+                      .asMap()
+                      .entries
+                      .map(
+                        (e) => pw.Text(
+                          "Day ${e.key + 1}: ${e.value} GB",
+                        ),
+                      )
+                      .toList(),
+                ),
 
-          _buildChart(),
+          pw.SizedBox(height: 25),
 
-          pw.SizedBox(height: 20),
-
-          // 🧾 DEVICE TABLE
-          pw.Header(level: 1, text: "Connected Devices"),
-
-          _buildDeviceTable(),
-
-          pw.SizedBox(height: 20),
-
-          // 🚨 THREAT TABLE
-          pw.Header(level: 1, text: "Threat Logs"),
-
-          _buildThreatTable(),
-
-          pw.SizedBox(height: 20),
-
-          // 📄 SUMMARY
-          pw.Header(level: 1, text: "Report Summary"),
-
-          pw.Paragraph(
-            text:
-                "This report presents network performance data across $range. "
-                "Bandwidth usage shows steady growth, while threat detection "
-                "increased during peak hours. The system successfully detected "
-                "and mitigated anomalies.",
+          // ================= THREAT TIMELINE =================
+          pw.Text(
+            "Threat Timeline",
+            style: pw.TextStyle(
+              fontSize: 18,
+              fontWeight: pw.FontWeight.bold,
+            ),
           ),
+
+          pw.SizedBox(height: 10),
+
+          threatTimeline.isEmpty
+              ? pw.Text("No threat timeline available.")
+              : pw.Column(
+                  children: threatTimeline
+                      .asMap()
+                      .entries
+                      .map(
+                        (e) => pw.Text(
+                          "Period ${e.key + 1}: ${e.value} threats",
+                        ),
+                      )
+                      .toList(),
+                ),
+
+          pw.SizedBox(height: 30),
+
+          // ================= SUMMARY =================
+          pw.Text(
+            "Summary",
+            style: pw.TextStyle(
+              fontSize: 18,
+              fontWeight: pw.FontWeight.bold,
+            ),
+          ),
+
+          pw.SizedBox(height: 10),
+
+          pw.Bullet(text: "Analytics generated successfully."),
+          pw.Bullet(text: "Bandwidth trends monitored."),
+          pw.Bullet(text: "Threat detection analysed."),
+          pw.Bullet(text: "Anomalies recorded and reviewed."),
+          pw.Bullet(text: "Network performance evaluated."),
         ],
       ),
     );
 
     await Printing.layoutPdf(
-      onLayout: (format) async => pdf.save(),
+      onLayout: (PdfPageFormat format) async => pdf.save(),
     );
   }
 
-  // ===========================
-  // 📊 KPI BOX
-  // ===========================
-  static pw.Widget _kpiBox(String title, String value) {
-    return pw.Container(
-      width: 120,
-      padding: const pw.EdgeInsets.all(10),
-      decoration: pw.BoxDecoration(
-        border: pw.Border.all(),
-      ),
-      child: pw.Column(
-        children: [
-          pw.Text(title, style: pw.TextStyle(fontSize: 10)),
-          pw.SizedBox(height: 5),
-          pw.Text(value,
-              style: pw.TextStyle(
-                  fontSize: 14, fontWeight: pw.FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-
-  // ===========================
-  // 📈 SIMPLE LINE CHART (REAL)
-  // ===========================
-  static pw.Widget _buildChart() {
-    final data = [2.0, 3.0, 2.5, 4.0, 3.8, 5.0];
-
-    return pw.Container(
-      height: 200,
-      child: pw.Row(
-        crossAxisAlignment: pw.CrossAxisAlignment.end,
-        children: data.map((value) {
-          return pw.Expanded(
-            child: pw.Container(
-              margin: const pw.EdgeInsets.symmetric(horizontal: 4),
-              height: value * 30,
-              color: PdfColors.blue,
+  // ================= TABLE ROW =================
+  static pw.TableRow _tableRow(
+    String title,
+    String value,
+  ) {
+    return pw.TableRow(
+      children: [
+        pw.Padding(
+          padding: const pw.EdgeInsets.all(10),
+          child: pw.Text(
+            title,
+            style: pw.TextStyle(
+              fontWeight: pw.FontWeight.bold,
             ),
-          );
-        }).toList(),
-      ),
-    );
-  }
+          ),
+        ),
 
-  // ===========================
-  // 🧾 DEVICE TABLE
-  // ===========================
-  static pw.Widget _buildDeviceTable() {
-    return pw.TableHelper.fromTextArray(
-      headers: ["IP Address", "MAC Address", "Usage"],
-      data: [
-        ["192.168.1.2", "AA:BB:CC:DD", "120 MB"],
-        ["192.168.1.3", "EE:FF:GG:HH", "300 MB"],
-        ["192.168.1.4", "II:JJ:KK:LL", "90 MB"],
-      ],
-    );
-  }
-
-  // ===========================
-  // 🚨 THREAT TABLE
-  // ===========================
-  static pw.Widget _buildThreatTable() {
-    return pw.TableHelper.fromTextArray(
-      headers: ["Time", "Threat Type", "Status"],
-      data: [
-        ["10:00", "Port Scan", "Blocked"],
-        ["11:20", "DDoS Attempt", "Mitigated"],
-        ["13:45", "Suspicious Login", "Flagged"],
+        pw.Padding(
+          padding: const pw.EdgeInsets.all(10),
+          child: pw.Text(value),
+        ),
       ],
     );
   }

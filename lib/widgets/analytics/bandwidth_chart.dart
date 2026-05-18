@@ -1,51 +1,130 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
+import '../../utils/colors.dart';
 
 class BandwidthBarChart extends StatelessWidget {
   final String range;
-  const BandwidthBarChart({super.key, required this.range});
+  final bool isDarkMode;
+
+  const BandwidthBarChart({
+    super.key,
+    required this.range,
+    required this.isDarkMode,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final cardColor = AppColors.getCardColor(isDarkMode);
+    final textColor = AppColors.getTextPrimary(isDarkMode);
+
     return Container(
-      height: 260,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: cardColor,
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("$range Bandwidth Usage",
-              style: const TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 10),
-          Expanded(
+          Text(
+            "Weekly Bandwidth Usage",
+            style: TextStyle(
+              color: textColor,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          SizedBox(
+            height: 220,
             child: BarChart(
               BarChartData(
-                titlesData: FlTitlesData(
-                  topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false)),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: true),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: true),
+                alignment: BarChartAlignment.spaceAround,
+                maxY: 600,
+
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: isDarkMode ? Colors.white12 : Colors.black12,
+                    strokeWidth: 1,
                   ),
                 ),
+
+                titlesData: FlTitlesData(
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, _) {
+                        return Text(
+                          value.toInt().toString(),
+                          style: const TextStyle(fontSize: 10),
+                        );
+                      },
+                    ),
+                  ),
+
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, _) {
+                        const labels = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+                        return Text(labels[value.toInt()]);
+                      },
+                    ),
+                  ),
+                ),
+
+                barTouchData: BarTouchData(
+                  touchTooltipData: BarTouchTooltipData(
+                    getTooltipColor: (_) => Colors.black,
+                    tooltipRoundedRadius: 8,
+                    getTooltipItem: (group, _, rod, __) {
+                      return BarTooltipItem(
+                        "${rod.toY} GB",
+                        const TextStyle(color: Colors.white),
+                      );
+                    },
+                  ),
+                ),
+
                 barGroups: [
-                  BarChartGroupData(x: 0, barRods: [BarChartRodData(toY: 5)]),
-                  BarChartGroupData(x: 1, barRods: [BarChartRodData(toY: 7)]),
-                  BarChartGroupData(x: 2, barRods: [BarChartRodData(toY: 4)]),
-                  BarChartGroupData(x: 3, barRods: [BarChartRodData(toY: 6)]),
+                  _bar(0, 450),
+                  _bar(1, 380),
+                  _bar(2, 520),
+                  _bar(3, 470),
+                  _bar(4, 300),
+                  _bar(5, 200),
+                  _bar(6, 310),
                 ],
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  BarChartGroupData _bar(int x, double y) {
+    return BarChartGroupData(
+      x: x,
+      barRods: [
+        BarChartRodData(
+          toY: y,
+          width: 14,
+          borderRadius: BorderRadius.circular(6),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF8A5CFF), Color(0xFFB06CFF)],
+            begin: Alignment.bottomCenter,
+            end: Alignment.topCenter,
+          ),
+        ),
+      ],
     );
   }
 }
