@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'biometric_screen.dart';
-import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+
+import '../layout/main_layout.dart';
+import 'biometric_screen.dart';
+import '../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,16 +15,86 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
+  String? _token;
+  bool _tokenCopied = false;
 
   @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleLogin(AuthProvider authProvider) async {
+    final email = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
+
+    setState(() {
+      _errorMessage = null;
+      _token = null;
+      _tokenCopied = false;
+    });
+
+    if (email.isEmpty || password.isEmpty) {
+      setState(() {
+        _errorMessage = 'Please enter email and password';
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await authProvider.signIn(email, password);
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+        _token = authProvider.token;
+      });
+
+      if (_token == null || _token!.isEmpty) {
+        setState(() {
+          _errorMessage = 'Login succeeded, but no backend token was returned.';
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.toString();
+      });
+    }
+  }
+
+  Future<void> _copyToken() async {
+    if (_token == null || _token!.isEmpty) return;
+
+    await Clipboard.setData(ClipboardData(text: _token!));
+    if (!mounted) return;
+
+    setState(() {
+      _tokenCopied = true;
+    });
+
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(
+        const SnackBar(content: Text('Token copied to clipboard')),
+      );
+  }
+
+  void _proceedToApp() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const BiometricScreen()),
+    );
   }
 
   @override
@@ -38,8 +110,6 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 40),
-
-              // ── Logo + App Name ──
               Row(
                 children: [
                   Container(
@@ -86,10 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 36),
-
-              // ── Heading ──
               const Text(
                 'Welcome Back!',
                 style: TextStyle(
@@ -103,10 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 'Login to monitor your lab network',
                 style: TextStyle(fontSize: 14, color: Color(0xFF9E9EB8)),
               ),
-
               const SizedBox(height: 60),
-
-              // ── Login Card ──
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
@@ -126,7 +190,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Card title
                     const Text(
                       'Admin Login',
                       style: TextStyle(
@@ -135,10 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         color: Color(0xFF1A1A2E),
                       ),
                     ),
-
                     const SizedBox(height: 24),
-
-                    // ── Username / Email Field ──
                     TextField(
                       controller: _usernameController,
                       keyboardType: TextInputType.emailAddress,
@@ -174,10 +234,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 16),
-
-                    // ── Password Field ──
                     TextField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
@@ -225,10 +282,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 28),
-
-                    // ── Error Message ──
                     if (_errorMessage != null)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 12.0),
@@ -239,93 +293,133 @@ class _LoginScreenState extends State<LoginScreen> {
                               color: Colors.red,
                               fontWeight: FontWeight.bold,
                             ),
+                            textAlign: TextAlign.center,
                           ),
                         ),
                       ),
-
-                    // ── Login Button or Loading ──
                     SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF8B3DCA), Color(0xFFE91E8C)],
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                            ),
-                            borderRadius: BorderRadius.circular(50),
+                      width: double.infinity,
+                      height: 52,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF8B3DCA), Color(0xFFE91E8C)],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
                           ),
-                          child: _isLoading
-                              ? const Center(
-                                  child: CircularProgressIndicator(
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                        child: _isLoading
+                            ? const Center(
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                ),
+                              )
+                            : ElevatedButton(
+                                onPressed: () => _handleLogin(authProvider),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(50),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Login',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
                                     color: Colors.white,
                                   ),
-                                )
-                              : ElevatedButton(
-                                  onPressed: () async {
-                                    final email = _usernameController.text
-                                        .trim();
-                                    final password = _passwordController.text
-                                        .trim();
-                                    setState(() {
-                                      _errorMessage = null;
-                                    });
-                                    if (email.isEmpty || password.isEmpty) {
-                                      setState(() {
-                                        _errorMessage =
-                                            'Please enter email and password';
-                                      });
-                                      return;
-                                    }
-                                    setState(() {
-                                      _isLoading = true;
-                                    });
-                                    try {
-                                      await authProvider.signIn(
-                                        email,
-                                        password,
-                                      );
-                                      if (mounted) {
-                                        setState(() {
-                                          _isLoading = false;
-                                        });
-                                        Navigator.pushReplacement(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => const BiometricScreen(),
-                                          ),
-                                        );
-                                      }
-                                    } catch (e) {
-                                      setState(() {
-                                        _isLoading = false;
-                                        _errorMessage = e.toString();
-                                      });
-                                    }
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.transparent,
-                                    shadowColor: Colors.transparent,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(50),
-                                    ),
-                                  ),
-                                  child: const Text(
-                                    'Login',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                                ),
+                              ),
+                      ),
+                    ),
+                    if (_token != null && _token!.isNotEmpty) ...[
+                      const SizedBox(height: 20),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF5F5FC),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: const Color(0xFFE2DDF2)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Backend Token',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1A1A2E),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            SelectableText(
+                              _token!,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF4B4B63),
+                                height: 1.4,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: _copyToken,
+                                    icon: const Icon(Icons.copy_rounded),
+                                    label: const Text('Copy Token'),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: const Color(0xFF7B2FBE),
+                                      side: const BorderSide(
+                                        color: Color(0xFF7B2FBE),
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(50),
+                                      ),
                                     ),
                                   ),
                                 ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: _tokenCopied
+                                        ? _proceedToApp
+                                        : null,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF7B2FBE),
+                                      foregroundColor: Colors.white,
+                                      disabledBackgroundColor: const Color(
+                                        0xFFBCA6D8,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(50),
+                                      ),
+                                    ),
+                                    child: const Text('Proceed'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (!_tokenCopied) ...[
+                              const SizedBox(height: 10),
+                              const Text(
+                                'Copy the token first, then proceed to the app.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF9E9EB8),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
-
+                    ],
                     const SizedBox(height: 16),
-
-                    // ── Forgot Password ──
                     Center(
                       child: TextButton(
                         onPressed: () {
@@ -344,7 +438,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 40),
             ],
           ),
