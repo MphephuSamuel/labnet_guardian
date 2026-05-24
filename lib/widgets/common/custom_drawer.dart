@@ -151,7 +151,7 @@ class CustomDrawer extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const AnalyticsScreen(),
+                          builder: (context) => AnalyticsScreen(),
                         ),
                       );
                     },
