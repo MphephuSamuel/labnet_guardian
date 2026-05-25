@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../providers/user_provider.dart';
 import '../../screens/advanced_search_screen.dart';
 import '../../screens/profile_screen.dart';
 import '../../screens/settings_screen.dart';
@@ -15,6 +16,10 @@ class CustomDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = themeProvider.isDarkMode;
+    final userProvider = Provider.of<UserProvider>(context);
+    final profile = userProvider.profile;
+    final avatar = profile?.avatar ?? 'A';
+    final avatarInitial = avatar.isNotEmpty ? avatar[0].toUpperCase() : 'A';
 
     final drawerBgColor = isDark
         ? const Color(0xFF0F0F1A)
@@ -85,9 +90,9 @@ class CustomDrawer extends StatelessWidget {
                       CircleAvatar(
                         backgroundColor: Colors.white.withValues(alpha: 0.2),
                         radius: 30,
-                        child: const Text(
-                          'A',
-                          style: TextStyle(
+                        child: Text(
+                          avatarInitial,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -95,30 +100,30 @@ class CustomDrawer extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 16.0),
-                      const Expanded(
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Admin User',
-                              style: TextStyle(
+                              profile?.displayName ?? 'Admin User',
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            SizedBox(height: 8),
+                            const SizedBox(height: 8),
                             Text(
-                              'Network\nAdministrator',
-                              style: TextStyle(
+                              profile?.role ?? 'Network\nAdministrator',
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
                               ),
                             ),
-                            SizedBox(height: 12),
+                            const SizedBox(height: 12),
                             Text(
-                              'admin@ump.ac.za',
-                              style: TextStyle(
+                              profile?.email ?? 'admin@ump.ac.za',
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
                               ),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
 import '../widgets/common/custom_app_bar.dart';
 import '../widgets/common/custom_bottom_nav_bar.dart';
 import '../widgets/common/custom_drawer.dart';
@@ -25,6 +27,9 @@ class MainLayoutState extends State<MainLayout> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<UserProvider>(context, listen: false).loadUserData();
+    });
   }
 
   final List<Widget> _screens = [

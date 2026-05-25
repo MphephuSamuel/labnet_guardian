@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/user_provider.dart';
 import '../utils/colors.dart';
 import '../utils/constants.dart';
 import '../widgets/settings/settings_section.dart';
@@ -13,26 +14,18 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  late bool _biometricEnabled = true;
-  bool _anomalyDetectionEnabled = true;
-  double _detectionSensitivity = 0.5;
-  bool _autoBlockThreats = false;
-  bool _simulationMode = false;
-  bool _emailAlerts = true;
-  bool _pushNotifications = true;
-
   final TextEditingController _ipController = TextEditingController();
   final TextEditingController _macController = TextEditingController();
+  
+  double? _localSensitivity;
 
-  final List<String> _trustedIpRanges = [
-    '192.168.1.0/24',
-    '10.0.0.0/8',
-  ];
-
-  final List<String> _trustedMacAddresses = [
-    'AA:BB:CC:DD:EE:01',
-    'AA:BB:CC:DD:EE:02',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<UserProvider>(context, listen: false).loadUserData();
+    });
+  }
 
   @override
   void dispose() {
@@ -41,10 +34,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.dispose();
   }
 
-  String get _sensitivityLabel {
-    if (_detectionSensitivity <= 0.33) {
+  String _getSensitivityLabel(double val) {
+    if (val <= 0.33) {
       return 'Low';
-    } else if (_detectionSensitivity <= 0.66) {
+    } else if (val <= 0.66) {
       return 'Medium';
     }
     return 'High';
@@ -54,28 +47,63 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = themeProvider.isDarkMode;
+    final userProvider = Provider.of<UserProvider>(context);
+
+    // Initial load check
+    final settings = userProvider.settings;
+    if (_localSensitivity == null && settings != null) {
+      _localSensitivity = settings.security.detectionSensitivity;
+    }
 
     return Scaffold(
       backgroundColor: AppColors.getBgColor(isDark),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(AppConstants.paddingDefault),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(context, isDark, themeProvider),
-                const SizedBox(height: AppConstants.paddingXl),
-                _buildSecurityConfiguration(isDark),
-                const SizedBox(height: AppConstants.paddingLg),
-                _buildWhitelistManagement(isDark),
-                const SizedBox(height: AppConstants.paddingLg),
-                _buildNotificationPreferences(isDark),
-                
-              ],
-            ),
-          ),
-        ),
+        child: userProvider.isLoading && settings == null
+            ? const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
+                ),
+              )
+            : SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppConstants.paddingDefault),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildHeader(context, isDark, themeProvider),
+                      const SizedBox(height: AppConstants.paddingXl),
+                      if (userProvider.error != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: AppConstants.paddingDefault),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.redAccent.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(AppConstants.radiusSm),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.error_outline, color: Colors.redAccent),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Error: ${userProvider.error}',
+                                    style: const TextStyle(color: Colors.redAccent),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      _buildSecurityConfiguration(isDark, userProvider),
+                      const SizedBox(height: AppConstants.paddingLg),
+                      _buildWhitelistManagement(isDark, userProvider),
+                      const SizedBox(height: AppConstants.paddingLg),
+                      _buildNotificationPreferences(isDark, userProvider),
+                    ],
+                  ),
+                ),
+              ),
       ),
     );
   }
@@ -114,7 +142,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildSecurityConfiguration(bool isDark) {
+  Widget _buildSecurityConfiguration(bool isDark, UserProvider userProvider) {
+    final settings = userProvider.settings;
+    final anomaly = settings?.security.anomalyDetectionEnabled ?? true;
+    final autoBlock = settings?.security.autoBlockThreats ?? false;
+    final simulation = settings?.security.simulationMode ?? false;
+
     return SettingsSection(
       title: 'Security Configuration',
       isDark: isDark,
@@ -125,22 +158,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
           iconColor: AppColors.iconPurple,
           label: 'Anomaly Detection',
           subtitle: 'Monitor unusual network behavior',
-          value: _anomalyDetectionEnabled,
-          onChanged: (value) => setState(() {
-            _anomalyDetectionEnabled = value;
-          }),
+          value: anomaly,
+          onChanged: (value) => _updateSecurity(userProvider, anomaly: value),
         ),
-        _buildSensitivityRow(isDark),
+        _buildSensitivityRow(isDark, userProvider),
         _buildToggleRow(
           isDark: isDark,
           icon: Icons.shield_moon,
           iconColor: AppColors.iconPink,
           label: 'Auto-Block Threats',
           subtitle: 'Automatically block detected threats',
-          value: _autoBlockThreats,
-          onChanged: (value) => setState(() {
-            _autoBlockThreats = value;
-          }),
+          value: autoBlock,
+          onChanged: (value) => _updateSecurity(userProvider, autoBlock: value),
         ),
         _buildToggleRow(
           isDark: isDark,
@@ -148,16 +177,94 @@ class _SettingsScreenState extends State<SettingsScreen> {
           iconColor: AppColors.iconBlue,
           label: 'Simulation Mode',
           subtitle: 'Test alerts without real threats',
-          value: _simulationMode,
-          onChanged: (value) => setState(() {
-            _simulationMode = value;
-          }),
+          value: simulation,
+          onChanged: (value) => _updateSecurity(userProvider, simulation: value),
         ),
       ],
     );
   }
 
-  Widget _buildWhitelistManagement(bool isDark) {
+  Widget _buildSensitivityRow(bool isDark, UserProvider userProvider) {
+    final settings = userProvider.settings;
+    final currentSensitivity = _localSensitivity ?? settings?.security.detectionSensitivity ?? 0.5;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppConstants.paddingDefault,
+        vertical: AppConstants.paddingSm,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: AppConstants.iconContainerSize,
+                height: AppConstants.iconContainerSize,
+                decoration: BoxDecoration(
+                  color: AppColors.iconPurple.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(AppConstants.radiusSm),
+                ),
+                child: const Icon(Icons.speed, color: AppColors.iconPurple, size: 24),
+              ),
+              const SizedBox(width: AppConstants.paddingDefault),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Detection Sensitivity',
+                      style: TextStyle(
+                        fontSize: AppConstants.fontSizeMedium,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.getTextPrimary(isDark),
+                      ),
+                    ),
+                    const SizedBox(height: AppConstants.paddingSm),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppConstants.paddingSm,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.iconPink.withOpacity(0.18),
+                        borderRadius: BorderRadius.circular(AppConstants.radiusSm),
+                      ),
+                      child: Text(
+                        _getSensitivityLabel(currentSensitivity),
+                        style: TextStyle(
+                          fontSize: AppConstants.fontSizeSmall,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.iconPink,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          Slider(
+            value: currentSensitivity,
+            activeColor: AppColors.iconPurple,
+            inactiveColor: AppColors.iconPurple.withOpacity(0.25),
+            min: 0,
+            max: 1,
+            divisions: 100,
+            label: _getSensitivityLabel(currentSensitivity),
+            onChanged: (value) {
+              setState(() {
+                _localSensitivity = value;
+              });
+            },
+            onChangeEnd: (value) => _updateSecurity(userProvider, sensitivity: value),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWhitelistManagement(bool isDark, UserProvider userProvider) {
     return SettingsSection(
       title: 'Whitelist Management',
       isDark: isDark,
@@ -167,22 +274,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
           label: 'Trusted IP Ranges',
           controller: _ipController,
           placeholder: '192.168.1.0/24',
-          onAdd: _addIpRange,
-          items: _trustedIpRanges,
+          onAdd: () => _addIpRange(userProvider),
+          items: userProvider.trustedIpRanges,
+          onDelete: (item) => _deleteWhitelistItem(userProvider, 'ip', item),
         ),
         _buildListInputSection(
           isDark: isDark,
           label: 'Trusted MAC Addresses',
           controller: _macController,
           placeholder: 'AA:BB:CC:DD:EE:FF',
-          onAdd: _addMacAddress,
-          items: _trustedMacAddresses,
+          onAdd: () => _addMacAddress(userProvider),
+          items: userProvider.trustedMacAddresses,
+          onDelete: (item) => _deleteWhitelistItem(userProvider, 'mac', item),
         ),
       ],
     );
   }
 
-  Widget _buildNotificationPreferences(bool isDark) {
+  Widget _buildNotificationPreferences(bool isDark, UserProvider userProvider) {
+    final settings = userProvider.settings;
+    final email = settings?.notifications.emailAlerts ?? true;
+    final push = settings?.notifications.pushNotifications ?? true;
+
     return SettingsSection(
       title: 'Notification Preferences',
       isDark: isDark,
@@ -193,10 +306,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           iconColor: AppColors.iconPink,
           label: 'Email Alerts',
           subtitle: 'Receive security alerts via email',
-          value: _emailAlerts,
-          onChanged: (value) => setState(() {
-            _emailAlerts = value;
-          }),
+          value: email,
+          onChanged: (value) => _updateNotifications(userProvider, email: value),
         ),
         _buildToggleRow(
           isDark: isDark,
@@ -204,10 +315,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           iconColor: AppColors.iconBlue,
           label: 'Push Notifications',
           subtitle: 'Receive real-time push alerts',
-          value: _pushNotifications,
-          onChanged: (value) => setState(() {
-            _pushNotifications = value;
-          }),
+          value: push,
+          onChanged: (value) => _updateNotifications(userProvider, push: value),
         ),
       ],
     );
@@ -279,82 +388,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildSensitivityRow(bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppConstants.paddingDefault,
-        vertical: AppConstants.paddingSm,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: AppConstants.iconContainerSize,
-                height: AppConstants.iconContainerSize,
-                decoration: BoxDecoration(
-                  color: AppColors.iconPurple.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(AppConstants.radiusSm),
-                ),
-                child: const Icon(Icons.speed, color: AppColors.iconPurple, size: 24),
-              ),
-              const SizedBox(width: AppConstants.paddingDefault),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Detection Sensitivity',
-                      style: TextStyle(
-                        fontSize: AppConstants.fontSizeMedium,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.getTextPrimary(isDark),
-                      ),
-                    ),
-                    const SizedBox(height: AppConstants.paddingSm),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppConstants.paddingSm,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.iconPink.withOpacity(0.18),
-                        borderRadius: BorderRadius.circular(AppConstants.radiusSm),
-                      ),
-                      child: Text(
-                        _sensitivityLabel,
-                        style: TextStyle(
-                          fontSize: AppConstants.fontSizeSmall,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.iconPink,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          Slider(
-            value: _detectionSensitivity,
-            activeColor: AppColors.iconPurple,
-            inactiveColor: AppColors.iconPurple.withOpacity(0.25),
-            min: 0,
-            max: 1,
-            divisions: 100,
-            label: _sensitivityLabel,
-            onChanged: (value) {
-              setState(() {
-                _detectionSensitivity = value;
-              });
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildListInputSection({
     required bool isDark,
     required String label,
@@ -362,6 +395,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String placeholder,
     required VoidCallback onAdd,
     required List<String> items,
+    required ValueChanged<String> onDelete,
   }) {
     return Padding(
       padding: const EdgeInsets.only(
@@ -456,11 +490,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       size: 18,
                       color: AppColors.getTextSecondary(isDark),
                     ),
-                    onDeleted: () {
-                      setState(() {
-                        items.remove(item);
-                      });
-                    },
+                    onDeleted: () => onDelete(item),
                   ),
                 )
                 .toList(),
@@ -470,21 +500,91 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _addIpRange() {
-    final value = _ipController.text.trim();
-    if (value.isEmpty) return;
-    setState(() {
-      _trustedIpRanges.add(value);
-      _ipController.clear();
-    });
+  // --- Async Backend Updates ---
+
+  Future<void> _updateSecurity(
+    UserProvider provider, {
+    bool? anomaly,
+    double? sensitivity,
+    bool? autoBlock,
+    bool? simulation,
+  }) async {
+    final currentSettings = provider.settings?.security;
+    try {
+      await provider.updateSecuritySettings(
+        anomaly: anomaly ?? currentSettings?.anomalyDetectionEnabled ?? true,
+        sensitivity: sensitivity ?? currentSettings?.detectionSensitivity ?? 0.5,
+        autoBlock: autoBlock ?? currentSettings?.autoBlockThreats ?? false,
+        simulation: simulation ?? currentSettings?.simulationMode ?? false,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update security settings: $e')),
+        );
+      }
+    }
   }
 
-  void _addMacAddress() {
+  Future<void> _updateNotifications(
+    UserProvider provider, {
+    bool? email,
+    bool? push,
+  }) async {
+    final currentNotifications = provider.settings?.notifications;
+    try {
+      await provider.updateNotificationSettings(
+        email: email ?? currentNotifications?.emailAlerts ?? true,
+        push: push ?? currentNotifications?.pushNotifications ?? true,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update notifications: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _addIpRange(UserProvider provider) async {
+    final value = _ipController.text.trim();
+    if (value.isEmpty) return;
+    try {
+      await provider.addWhitelistItem(type: 'ip', value: value);
+      _ipController.clear();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add IP: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _addMacAddress(UserProvider provider) async {
     final value = _macController.text.trim();
     if (value.isEmpty) return;
-    setState(() {
-      _trustedMacAddresses.add(value);
+    try {
+      await provider.addWhitelistItem(type: 'mac', value: value);
       _macController.clear();
-    });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add MAC: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteWhitelistItem(UserProvider provider, String type, String value) async {
+    try {
+      await provider.removeWhitelistItem(type: type, value: value);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to remove item: $e')),
+        );
+      }
+    }
   }
 }
