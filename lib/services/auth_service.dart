@@ -43,7 +43,10 @@ class AuthService {
       }
     }
 
-    return await _storage.read(key: 'firebase_id_token');
+    // If currentUser is null, the Firebase session is gone/expired.
+    // Stored token is likely expired, so clear it and return null.
+    await _storage.delete(key: 'firebase_id_token');
+    return null;
   }
 
   // Get stored email
