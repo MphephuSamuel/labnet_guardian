@@ -1,21 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../providers/theme_provider.dart';
+import '../utils/colors.dart';
 
 class HelpSupportScreen extends StatelessWidget {
   const HelpSupportScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Provider.of<ThemeProvider>(context);
+    final isDark = theme.isDarkMode;
+    
     return Scaffold(
-      backgroundColor: const Color(0xFFEEEEF8),
+      backgroundColor: AppColors.getBgColor(isDark),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFEEEEF8),
+        backgroundColor: AppColors.getBgColor(isDark),
         elevation: 0,
-        leading: const BackButton(color: Colors.black),
+        leading: BackButton(color: AppColors.getTextPrimary(isDark)),
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Help & Support',
           style: TextStyle(
-            color: Colors.black,
+            color: AppColors.getTextPrimary(isDark),
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
@@ -23,17 +30,20 @@ class HelpSupportScreen extends StatelessWidget {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE8E8F4),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.dark_mode_outlined,
-                color: Colors.black54,
-                size: 20,
+            child: GestureDetector(
+              onTap: () => theme.toggleTheme(),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkCard : const Color(0xFFE8E8F4),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isDark ? Icons.wb_sunny : Icons.dark_mode_outlined,
+                  color: AppColors.getTextPrimary(isDark),
+                  size: 20,
+                ),
               ),
             ),
           ),
@@ -47,16 +57,16 @@ class HelpSupportScreen extends StatelessWidget {
             const SizedBox(height: 8),
             _buildImmediateHelpCard(),
             const SizedBox(height: 28),
-            const Text(
+            Text(
               'Resources',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Colors.black,
+                color: AppColors.getTextPrimary(isDark),
               ),
             ),
             const SizedBox(height: 16),
-            _buildResourcesGrid(),
+            _buildResourcesGrid(isDark),
           ],
         ),
       ),
@@ -94,7 +104,6 @@ class HelpSupportScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildContactButton(Icons.chat_bubble_outline, 'Live Chat'),
               _buildContactButton(Icons.mail_outline, 'Email'),
               _buildContactButton(Icons.phone_outlined, 'Call'),
             ],
@@ -111,64 +120,67 @@ class HelpSupportScreen extends StatelessWidget {
     } else if (label == 'Call') {
       info = '0116000000';
     }
-    return Column(
-      children: [
-        Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.22),
-            borderRadius: BorderRadius.circular(18),
+    
+    return GestureDetector(
+      onTap: () async {
+        if (label == 'Email') {
+          final email = Uri.parse('mailto:labnet@gmail.com');
+          if (await canLaunchUrl(email)) {
+            await launchUrl(email);
+          }
+        } else if (label == 'Call') {
+          final phone = Uri.parse('tel:0116000000');
+          if (await canLaunchUrl(phone)) {
+            await launchUrl(phone);
+          }
+        }
+      },
+      child: Column(
+        children: [
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.22),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Icon(icon, color: Colors.white, size: 30),
           ),
-          child: Icon(icon, color: Colors.white, size: 30),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        if (info != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 2.0),
-            child: Text(
-              info,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-              ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
             ),
           ),
-      ],
+          if (info != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2.0),
+              child: Text(
+                info,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
-  Widget _buildResourcesGrid() {
+  Widget _buildResourcesGrid(bool isDark) {
     final resources = [
-      _ResourceItem(
-        icon: Icons.menu_book_outlined,
-        iconBgColor: const Color(0xFFEDE8FB),
-        iconColor: const Color(0xFF7B4FD4),
-        title: 'User Guide',
-        description: 'Complete documentation for LabNet',
-      ),
       _ResourceItem(
         icon: Icons.videocam_outlined,
         iconBgColor: const Color(0xFFFDE8F0),
         iconColor: const Color(0xFFE84FA0),
         title: 'Video Tutorials',
         description: 'Step-by-step video walkthroughs',
-      ),
-      _ResourceItem(
-        icon: Icons.description_outlined,
-        iconBgColor: const Color(0xFFE8EDFB),
-        iconColor: const Color(0xFF4F6BD4),
-        title: 'API\nDocumentation',
-        description: 'Developer reference and API docs',
+        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       ),
       _ResourceItem(
         icon: Icons.help_outline,
@@ -176,6 +188,7 @@ class HelpSupportScreen extends StatelessWidget {
         iconColor: const Color(0xFF2BAE9E),
         title: 'Troubleshooting',
         description: 'Common issues and solutions',
+        url: 'https://labnet-support.com/troubleshooting',
       ),
     ];
 
@@ -186,56 +199,64 @@ class HelpSupportScreen extends StatelessWidget {
       crossAxisSpacing: 14,
       mainAxisSpacing: 14,
       childAspectRatio: 0.75,
-      children: resources.map(_buildResourceCard).toList(),
+      children: resources.map((item) => _buildResourceCard(item, isDark)).toList(),
     );
   }
 
-  Widget _buildResourceCard(_ResourceItem item) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: item.iconBgColor,
-              borderRadius: BorderRadius.circular(14),
+  Widget _buildResourceCard(_ResourceItem item, bool isDark) {
+    return GestureDetector(
+      onTap: () async {
+        final url = Uri.parse(item.url);
+        if (await canLaunchUrl(url)) {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: AppColors.getCardColor(isDark),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-            child: Icon(item.icon, color: item.iconColor, size: 26),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            item.title,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-              height: 1.25,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: item.iconBgColor,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(item.icon, color: item.iconColor, size: 26),
             ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            item.description,
-            style: const TextStyle(
-              fontSize: 13,
-              color: Colors.black45,
-              height: 1.4,
+            const SizedBox(height: 14),
+            Text(
+              item.title,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: AppColors.getTextPrimary(isDark),
+                height: 1.25,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 6),
+            Text(
+              item.description,
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.getTextSecondary(isDark),
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -247,6 +268,7 @@ class _ResourceItem {
   final Color iconColor;
   final String title;
   final String description;
+  final String url;
 
   const _ResourceItem({
     required this.icon,
@@ -254,5 +276,6 @@ class _ResourceItem {
     required this.iconColor,
     required this.title,
     required this.description,
+    required this.url,
   });
 }
