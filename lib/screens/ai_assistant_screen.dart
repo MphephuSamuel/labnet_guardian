@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/ai_assistant/chat_bubble.dart';
 import '../widgets/ai_assistant/quick_action_card.dart';
 import '../widgets/ai_assistant/chat_input_field.dart';
+import '../services/ai_service.dart';
 
 class AiAssistantScreen extends StatefulWidget {
   const AiAssistantScreen({super.key});
@@ -13,6 +14,8 @@ class AiAssistantScreen extends StatefulWidget {
 class _AiAssistantScreenState extends State<AiAssistantScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final AiService _aiService = AiService();
+  bool _isLoading = false;
 
   final List<Map<String, dynamic>> _messages = [
     {
@@ -22,46 +25,62 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
     }
   ];
 
-  void _sendMessage(String text) {
-    if (text.trim().isEmpty) return;
+  void _sendMessage(String text) async {
+    if (text.trim().isEmpty || _isLoading) return;
 
     final now = TimeOfDay.now();
     final timeString = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
 
+    final prompt = text;
+
     setState(() {
       _messages.add({
-        'text': text,
+        'text': prompt,
         'time': timeString,
         'isBot': false,
       });
+      _isLoading = true;
     });
 
     _messageController.clear();
     _scrollToBottom();
 
-    // Simulate AI thinking and responding
-    Future.delayed(const Duration(seconds: 1), () {
-      String responseText = "I'm a dummy assistant for now. But I see you're asking about: '$text'. I'll be able to help with this soon!";
-      
-      if (text.toLowerCase().contains('network status')) {
-        responseText = "The network is currently stable. Total bandwidth usage is at 45%. No major outages detected.";
-      } else if (text.toLowerCase().contains('device issue')) {
-        responseText = "I'm monitoring 2 suspicious devices. TABLET-ENG-015 has unusual high traffic, and IOT-SENSOR-01 is communicating with an unknown external IP.";
-      } else if (text.toLowerCase().contains('security overview')) {
-        responseText = "Your network security score is 85/100. There are 2 active alerts requiring your attention in the Alerts tab.";
-      } else if (text.toLowerCase().contains('traffic stats')) {
-        responseText = "Today's peak traffic was 1.2 GB/s at 14:00. Average throughput is currently 350 MB/s.";
-      }
-
-      setState(() {
-        _messages.add({
-          'text': responseText,
-          'time': timeString,
-          'isBot': true,
-        });
+    // Add placeholder message for the bot's response
+    final thinkingMessageIndex = _messages.length;
+    setState(() {
+      _messages.add({
+        'text': 'Thinking...',
+        'time': timeString,
+        'isBot': true,
       });
-      _scrollToBottom();
     });
+    _scrollToBottom();
+
+    try {
+      // Call real backend API
+      final response = await _aiService.queryAI(
+        prompt,
+        _messages.sublist(0, thinkingMessageIndex),
+      );
+      final String reply = response['reply'] ?? 'No response returned';
+
+      if (mounted) {
+        setState(() {
+          _messages[thinkingMessageIndex]['text'] = reply;
+          _isLoading = false;
+        });
+        _scrollToBottom();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _messages[thinkingMessageIndex]['text'] =
+              'Error: Failed to connect to AI Assistant. ($e)';
+          _isLoading = false;
+        });
+        _scrollToBottom();
+      }
+    }
   }
 
   void _scrollToBottom() {

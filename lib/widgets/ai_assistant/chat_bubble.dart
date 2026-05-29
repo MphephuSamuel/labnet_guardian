@@ -14,6 +14,20 @@ class ChatBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final bubbleColor = isBot
+        ? Theme.of(context).cardColor
+        : (isDark ? const Color(0xFF7B2FBE) : const Color(0xFFF0E6FF));
+
+    final textColor = isBot
+        ? (isDark ? Colors.white : Colors.black87)
+        : (isDark ? Colors.white : const Color(0xFF4A154B));
+
+    final timeColor = isBot
+        ? Colors.grey.shade500
+        : (isDark ? Colors.white70 : Colors.grey.shade600);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 24.0),
       child: Row(
@@ -43,7 +57,7 @@ class ChatBubble extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
+                    color: bubbleColor,
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(16),
                       topRight: const Radius.circular(16),
@@ -61,16 +75,20 @@ class ChatBubble extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      _buildFormattedText(
                         text,
-                        style: const TextStyle(fontSize: 15, height: 1.5),
+                        TextStyle(
+                          fontSize: 15,
+                          height: 1.5,
+                          color: textColor,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         time,
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey.shade500,
+                          color: timeColor,
                         ),
                       ),
                     ],
@@ -98,6 +116,102 @@ class ChatBubble extends StatelessWidget {
             const SizedBox(width: 48), // Right spacer for bot messages
         ],
       ),
+    );
+  }
+
+  Widget _buildFormattedText(String text, TextStyle baseStyle) {
+    final lines = text.split('\n');
+    final List<Widget> lineWidgets = [];
+
+    for (var i = 0; i < lines.length; i++) {
+      final line = lines[i];
+      if (line.trim().isEmpty) {
+        if (i < lines.length - 1) {
+          lineWidgets.add(const SizedBox(height: 8));
+        }
+        continue;
+      }
+
+      // Check if it is a heading
+      final isHeading = line.trim().startsWith('#');
+      // Check if it is a bullet point
+      final isBullet = line.trim().startsWith('- ') ||
+          line.trim().startsWith('* ') ||
+          line.trim().startsWith('• ');
+
+      String cleanLine = line;
+      TextStyle currentStyle = baseStyle;
+
+      if (isHeading) {
+        // Strip leading # symbols and spaces
+        cleanLine = line.trim().replaceFirst(RegExp(r'^#+\s*'), '');
+        currentStyle = baseStyle.copyWith(
+          fontWeight: FontWeight.bold,
+          fontSize: baseStyle.fontSize! + 2,
+        );
+      } else if (isBullet) {
+        // Strip the bullet marker
+        cleanLine = line.trim().substring(2);
+      }
+
+      // Parse bold elements in the line
+      final List<InlineSpan> spans = [];
+      final RegExp regExp = RegExp(r'\*\*(.*?)\*\*');
+      int start = 0;
+
+      for (final Match match in regExp.allMatches(cleanLine)) {
+        if (match.start > start) {
+          spans.add(TextSpan(
+            text: cleanLine.substring(start, match.start),
+          ));
+        }
+        spans.add(TextSpan(
+          text: match.group(1),
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ));
+        start = match.end;
+      }
+
+      if (start < cleanLine.length) {
+        spans.add(TextSpan(
+          text: cleanLine.substring(start),
+        ));
+      }
+
+      if (isBullet) {
+        lineWidgets.add(
+          Padding(
+            padding: const EdgeInsets.only(left: 8.0, bottom: 4.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('• ', style: currentStyle.copyWith(fontWeight: FontWeight.bold)),
+                Expanded(
+                  child: Text.rich(
+                    TextSpan(children: spans),
+                    style: currentStyle,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      } else {
+        lineWidgets.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4.0),
+            child: Text.rich(
+              TextSpan(children: spans),
+              style: currentStyle,
+            ),
+          ),
+        );
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: lineWidgets,
     );
   }
 }

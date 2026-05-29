@@ -1,9 +1,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:provider/provider.dart';
 import '../services/biometric_service.dart';
 import '../screens/authentication_screen.dart';
 import '../layout/main_layout.dart';
+import '../providers/auth_provider.dart';
 
 class BiometricScreen extends StatefulWidget {
   const BiometricScreen({super.key});
@@ -47,15 +49,26 @@ class _BiometricScreenState extends State<BiometricScreen> {
 
     if (!mounted) return;
 
-    setState(() => _isLoading = false);
-
     if (result.success) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const AuthSuccessScreen()),
-      );
+      try {
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        await authProvider.signInWithStoredCredentials();
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const AuthSuccessScreen()),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Biometrics accepted, but could not authenticate session: $e';
+        });
+      }
     } else {
       setState(() {
+        _isLoading = false;
         _errorMessage =
             result.errorMessage ?? 'Biometric authentication failed';
       });
