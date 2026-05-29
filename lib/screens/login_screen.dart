@@ -349,7 +349,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Backend Token',
+                              'Firebase ID Token',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,

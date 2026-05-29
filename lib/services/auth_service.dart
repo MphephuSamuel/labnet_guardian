@@ -14,7 +14,7 @@ class AuthService {
       );
       User? user = result.user;
       if (user != null) {
-        String? token = await user.getIdToken();
+        String? token = await user.getIdToken(true);
         await _storage.write(key: 'firebase_id_token', value: token);
         // Store credentials for biometric login
         await _storage.write(key: 'email', value: email);
@@ -34,7 +34,19 @@ class AuthService {
 
   // Get stored token
   Future<String?> getToken() async {
-    return await _storage.read(key: 'firebase_id_token');
+    final user = _auth.currentUser;
+    if (user != null) {
+      final freshToken = await user.getIdToken(true);
+      if (freshToken != null) {
+        await _storage.write(key: 'firebase_id_token', value: freshToken);
+        return freshToken;
+      }
+    }
+
+    // If currentUser is null, the Firebase session is gone/expired.
+    // Stored token is likely expired, so clear it and return null.
+    await _storage.delete(key: 'firebase_id_token');
+    return null;
   }
 
   // Get stored email

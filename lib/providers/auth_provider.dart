@@ -8,6 +8,14 @@ class AuthProvider with ChangeNotifier {
   String? _token;
   bool _isAuthenticated = false;
 
+  String _tokenPreview(String token) {
+    const previewLength = 20;
+    if (token.length <= previewLength) {
+      return token;
+    }
+    return '${token.substring(0, previewLength)}...';
+  }
+
   bool get isAuthenticated => _isAuthenticated;
   String? get token => _token;
 
@@ -17,9 +25,6 @@ class AuthProvider with ChangeNotifier {
       if (user != null) {
         _token = await _authService.getToken();
         if (_token != null) {
-          // Set token in ApiClient for all requests
-          // ignore: avoid_print
-          print('Setting ApiClient token: $_token');
           ApiClient.setToken(_token!);
         }
         log('User logged in', name: 'auth');
@@ -34,23 +39,49 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<void> signInWithStoredCredentials() async {
+    try {
+      final user = await _authService.signInWithStoredCredentials();
+      if (user != null) {
+        _token = await _authService.getToken();
+        if (_token != null) {
+          ApiClient.setToken(_token!);
+        }
+        log('User logged in with stored credentials', name: 'auth');
+        _isAuthenticated = true;
+        notifyListeners();
+      } else {
+        throw Exception('No stored credentials found.');
+      }
+    } catch (e) {
+      log('Stored credential login failed: $e', name: 'auth', error: e);
+      _isAuthenticated = false;
+      ApiClient.clearToken();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
   Future<void> signOut() async {
     await _authService.signOut();
     _token = null;
     _isAuthenticated = false;
+    ApiClient.clearToken();
     notifyListeners();
   }
 
   Future<void> loadToken() async {
     _token = await _authService.getToken();
-    debugPrint('Loaded Token: $_token'); // Debug print to confirm token loading
     if (_token != null) {
       // Set token in ApiClient for all requests
       // ignore: avoid_print
-      print('Setting ApiClient token: $_token');
+      print('Loaded ApiClient token preview: ${_tokenPreview(_token!)}');
       ApiClient.setToken(_token!);
+      _isAuthenticated = true;
+    } else {
+      ApiClient.clearToken();
+      _isAuthenticated = false;
     }
-    _isAuthenticated = _token != null;
     notifyListeners();
   }
 }
