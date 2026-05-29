@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../utils/colors.dart';
 
 class StatsCard extends StatelessWidget {
   final String title;
@@ -7,7 +6,7 @@ class StatsCard extends StatelessWidget {
   final String change;
   final IconData icon;
   final Color color;
-  final bool isDarkMode; // 🔥 NEW
+  final bool isDarkMode;
 
   const StatsCard({
     super.key,
@@ -16,62 +15,76 @@ class StatsCard extends StatelessWidget {
     required this.change,
     required this.icon,
     required this.color,
-    required this.isDarkMode, // 🔥 REQUIRED
+    required this.isDarkMode,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isNegative = change.contains('-');
-
-    final cardColor = AppColors.getCardColor(isDarkMode);
-    final textPrimary = AppColors.getTextPrimary(isDarkMode);
-    final textSecondary = AppColors.getTextSecondary(isDarkMode);
+    final bgColor = isDarkMode ? const Color(0xFF1A1A2E) : Colors.white;
+    final textColor = isDarkMode ? Colors.white : Colors.black87;
+    final changeIsPositive = change.startsWith('+');
+    final changeColor = changeIsPositive ? Colors.green : (change.startsWith('-') ? Colors.red : Colors.grey);
 
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: cardColor, // ✅ dynamic
+        color: bgColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            blurRadius: 6,
-            color: isDarkMode
-                ? Colors.black.withOpacity(0.3)
-                : Colors.black12,
-            offset: const Offset(0, 3),
-          )
+            color: isDarkMode ? Colors.black26 : Colors.grey.shade200,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(icon, color: color, size: 28),
-
-          const SizedBox(height: 10),
-
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: changeColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  change,
+                  style: TextStyle(
+                    color: changeColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           Text(
             value,
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: textPrimary, // ✅ dynamic
+              color: textColor,
             ),
           ),
-
+          const SizedBox(height: 4),
           Text(
             title,
-            style: TextStyle(color: textSecondary), // ✅ dynamic
-          ),
-
-          const SizedBox(height: 6),
-
-          Text(
-            change,
             style: TextStyle(
-              color: isNegative
-                  ? AppColors.critical
-                  : AppColors.connection, // ✅ use your system
-              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: textColor.withOpacity(0.7),
             ),
           ),
         ],
