@@ -1,11 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../providers/theme_provider.dart';
 import '../utils/colors.dart';
 
-class HelpSupportScreen extends StatelessWidget {
+class HelpSupportScreen extends StatefulWidget {
   const HelpSupportScreen({super.key});
+
+  @override
+  State<HelpSupportScreen> createState() => _HelpSupportScreenState();
+}
+
+class _HelpSupportScreenState extends State<HelpSupportScreen> {
+  late YoutubePlayerController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = YoutubePlayerController(
+      initialVideoId: 'dQw4w9WgXcQ',
+      flags: const YoutubePlayerFlags(
+        autoPlay: false,
+        mute: false,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +92,9 @@ class HelpSupportScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            _buildResourcesGrid(isDark),
+            _buildVideoPlayerSection(isDark),
+            const SizedBox(height: 20),
+            _buildTroubleshootingSection(isDark),
           ],
         ),
       ),
@@ -172,46 +200,90 @@ class HelpSupportScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildResourcesGrid(bool isDark) {
-    final resources = [
-      _ResourceItem(
-        icon: Icons.videocam_outlined,
-        iconBgColor: const Color(0xFFFDE8F0),
-        iconColor: const Color(0xFFE84FA0),
-        title: 'Video Tutorials',
-        description: 'Step-by-step video walkthroughs',
-        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+  Widget _buildVideoPlayerSection(bool isDark) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.getCardColor(isDark),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      _ResourceItem(
-        icon: Icons.help_outline,
-        iconBgColor: const Color(0xFFE6F6F4),
-        iconColor: const Color(0xFF2BAE9E),
-        title: 'Troubleshooting',
-        description: 'Common issues and solutions',
-        url: 'https://labnet-support.com/troubleshooting',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(18),
+            child: Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFDE8F0),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(
+                    Icons.videocam_outlined,
+                    color: Color(0xFFE84FA0),
+                    size: 26,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Video Tutorials',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.getTextPrimary(isDark),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Step-by-step video walkthroughs',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.getTextSecondary(isDark),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+            child: YoutubePlayer(
+              controller: _controller,
+              showVideoProgressIndicator: true,
+              progressIndicatorColor: AppColors.gradientStart,
+            ),
+          ),
+        ],
       ),
-    ];
-
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 14,
-      mainAxisSpacing: 14,
-      childAspectRatio: 0.75,
-      children: resources.map((item) => _buildResourceCard(item, isDark)).toList(),
     );
   }
 
-  Widget _buildResourceCard(_ResourceItem item, bool isDark) {
+  Widget _buildTroubleshootingSection(bool isDark) {
     return GestureDetector(
       onTap: () async {
-        final url = Uri.parse(item.url);
+        final url = Uri.parse('https://github.com/MphephuSamuel/labnet_guardian');
         if (await canLaunchUrl(url)) {
           await launchUrl(url, mode: LaunchMode.externalApplication);
         }
       },
       child: Container(
+        width: double.infinity,
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: AppColors.getCardColor(isDark),
@@ -224,58 +296,53 @@ class HelpSupportScreen extends StatelessWidget {
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
             Container(
               width: 52,
               height: 52,
               decoration: BoxDecoration(
-                color: item.iconBgColor,
+                color: const Color(0xFFE6F6F4),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(item.icon, color: item.iconColor, size: 26),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              item.title,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: AppColors.getTextPrimary(isDark),
-                height: 1.25,
+              child: const Icon(
+                Icons.help_outline,
+                color: Color(0xFF2BAE9E),
+                size: 26,
               ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              item.description,
-              style: TextStyle(
-                fontSize: 13,
-                color: AppColors.getTextSecondary(isDark),
-                height: 1.4,
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Troubleshooting',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.getTextPrimary(isDark),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Common issues and solutions',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.getTextSecondary(isDark),
+                    ),
+                  ),
+                ],
               ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: AppColors.getTextSecondary(isDark),
+              size: 16,
             ),
           ],
         ),
       ),
     );
   }
-}
-
-class _ResourceItem {
-  final IconData icon;
-  final Color iconBgColor;
-  final Color iconColor;
-  final String title;
-  final String description;
-  final String url;
-
-  const _ResourceItem({
-    required this.icon,
-    required this.iconBgColor,
-    required this.iconColor,
-    required this.title,
-    required this.description,
-    required this.url,
-  });
 }
