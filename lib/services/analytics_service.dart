@@ -5,7 +5,16 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/analytics_model.dart';
 
 class AnalyticsService {
-  static String get baseUrl => dotenv.env['BACKEND_URL'] ?? 'http://192.168.0.29:3000';
+  // Read from .env file only - no hardcoded fallback
+  static String get baseUrl {
+    final url = dotenv.env['BACKEND_URL'];
+    if (url == null) {
+      print('❌ BACKEND_URL not found in .env file!');
+      throw Exception('BACKEND_URL not configured in .env');
+    }
+    print('📍 BACKEND_URL from .env: $url');
+    return url;
+  }
   
   static Future<AnalyticsModel> getAnalytics(String range) async {
     try {
@@ -17,7 +26,6 @@ class AnalyticsService {
       final token = await user.getIdToken();
       final url = '$baseUrl/api/analytics?range=$range';
       print('🌐 Calling: $url');
-      print('📍 Backend URL: $baseUrl');
       
       final response = await http.get(
         Uri.parse(url),
