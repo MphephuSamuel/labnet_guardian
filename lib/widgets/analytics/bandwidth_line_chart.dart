@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../utils/colors.dart';
 
-class ThreatTimelineChart extends StatelessWidget {
+class BandwidthLineChart extends StatelessWidget {
   final String range;
   final bool isDarkMode;
-  final List<double>? threatData;
+  final List<double>? bandwidthData;
 
-  const ThreatTimelineChart({
+  const BandwidthLineChart({
     super.key,
     required this.range,
     required this.isDarkMode,
-    this.threatData,
+    this.bandwidthData,
   });
 
   @override
@@ -19,7 +19,7 @@ class ThreatTimelineChart extends StatelessWidget {
     final cardColor = AppColors.getCardColor(isDarkMode);
     final textColor = AppColors.getTextPrimary(isDarkMode);
 
-    final data = threatData ?? [];
+    final data = bandwidthData ?? [];
     
     final displayData = data.isEmpty || data.every((v) => v == 0)
         ? _generateSampleData(range)
@@ -28,12 +28,9 @@ class ThreatTimelineChart extends StatelessWidget {
     final xLabels = _getXLabels(range, displayData.length);
     final showIndices = _getLabelIndices(displayData.length, range);
     
-    final maxValue = displayData.isEmpty ? 20 : displayData.reduce((a, b) => a > b ? a : b);
-    final yMax = maxValue > 0 ? (maxValue + 2).toDouble() : 20.0;
+    final maxValue = displayData.isEmpty ? 100 : displayData.reduce((a, b) => a > b ? a : b);
+    final yMax = maxValue > 0 ? maxValue * 1.2 : 100.0;
     final yMin = 0.0;
-    
-    // Calculate appropriate Y-axis interval based on max value
-    final yInterval = _getYAxisInterval(yMax);
 
     final spots = List.generate(
       displayData.length,
@@ -55,13 +52,13 @@ class ThreatTimelineChart extends StatelessWidget {
                 width: 8,
                 height: 8,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFFF4D6D),
+                  color: Color(0xFF8A5CFF),
                   shape: BoxShape.circle,
                 ),
               ),
               const SizedBox(width: 8),
               Text(
-                "Threat Timeline (${_getRangeTitle(range)})",
+                "Bandwidth Usage (${_getRangeTitle(range)})",
                 style: TextStyle(
                   color: textColor,
                   fontSize: 16,
@@ -81,7 +78,7 @@ class ThreatTimelineChart extends StatelessWidget {
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  horizontalInterval: yInterval,
+                  horizontalInterval: yMax / 4,
                   getDrawingHorizontalLine: (value) => FlLine(
                     color: isDarkMode ? Colors.white12 : Colors.black12,
                     strokeWidth: 1,
@@ -116,20 +113,15 @@ class ThreatTimelineChart extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 45,
-                      interval: yInterval,
+                      interval: yMax / 4,
                       getTitlesWidget: (value, meta) {
-                        // Only show integer values and avoid repeating zeros
-                        final intValue = value.round();
-                        if (value == intValue.toDouble() && intValue >= 0) {
-                          return Text(
-                            intValue.toString(),
-                            style: TextStyle(
-                              color: textColor,
-                              fontSize: 10,
-                            ),
-                          );
-                        }
-                        return const Text('');
+                        return Text(
+                          value.toInt().toString(),
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: 10,
+                          ),
+                        );
                       },
                     ),
                   ),
@@ -155,7 +147,7 @@ class ThreatTimelineChart extends StatelessWidget {
                         final index = touchedSpot.x.toInt();
                         final label = index < xLabels.length ? xLabels[index] : '';
                         return LineTooltipItem(
-                          '$label: ${touchedSpot.y.toInt()} threats',
+                          '$label: ${touchedSpot.y.toStringAsFixed(1)} MB/s',
                           const TextStyle(color: Colors.white, fontSize: 12),
                         );
                       }).toList();
@@ -167,14 +159,14 @@ class ThreatTimelineChart extends StatelessWidget {
                     spots: spots,
                     isCurved: true,
                     curveSmoothness: 0.3,
-                    color: const Color(0xFFFF4D6D),
+                    color: const Color(0xFF8A5CFF),
                     barWidth: 3,
                     dotData: FlDotData(
                       show: true,
                       getDotPainter: (spot, percent, barData, index) {
                         return FlDotCirclePainter(
                           radius: 4,
-                          color: const Color(0xFFFF4D6D),
+                          color: const Color(0xFF8A5CFF),
                           strokeWidth: 2,
                           strokeColor: Colors.white,
                         );
@@ -184,7 +176,7 @@ class ThreatTimelineChart extends StatelessWidget {
                       show: true,
                       gradient: LinearGradient(
                         colors: [
-                          const Color(0xFFFF4D6D).withOpacity(0.3),
+                          const Color(0xFF8A5CFF).withOpacity(0.3),
                           Colors.transparent,
                         ],
                         begin: Alignment.topCenter,
@@ -201,40 +193,31 @@ class ThreatTimelineChart extends StatelessWidget {
     );
   }
 
-  // Calculate appropriate Y-axis interval
-  double _getYAxisInterval(double maxY) {
-    if (maxY <= 5) return 1.0;
-    if (maxY <= 10) return 2.0;
-    if (maxY <= 20) return 5.0;
-    if (maxY <= 50) return 10.0;
-    return 20.0;
-  }
-
   List<double> _generateSampleData(String range) {
     switch(range) {
       case "Day":
-        return [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        return [25.0, 30.0, 28.0, 35.0, 45.0, 55.0, 65.0, 70.0, 85.0, 95.0, 88.0, 75.0, 65.0, 70.0, 80.0, 75.0, 65.0, 55.0, 45.0, 35.0, 30.0, 28.0, 25.0, 22.0];
       case "Week":
-        return [2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
+        return [45.0, 55.0, 65.0, 75.0, 85.0, 55.0, 40.0];
       case "Month":
-        return [1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 5.0, 6.0, 6.0, 7.0, 7.0, 8.0, 8.0, 9.0, 9.0, 10.0, 10.0, 11.0, 11.0, 12.0, 12.0, 13.0, 13.0, 14.0, 14.0, 15.0, 15.0];
+        return [35.0, 40.0, 45.0, 50.0, 55.0, 60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0, 95.0, 100.0, 105.0, 110.0, 105.0, 100.0, 95.0, 90.0, 85.0, 80.0, 75.0, 70.0, 65.0, 60.0, 55.0, 50.0, 45.0, 40.0];
       case "Year":
-        return [5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0];
+        return [45.0, 50.0, 55.0, 65.0, 75.0, 85.0, 95.0, 100.0, 95.0, 85.0, 75.0, 65.0];
       default:
-        return [2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
+        return [45.0, 55.0, 65.0, 75.0, 85.0, 55.0, 40.0];
     }
   }
 
   List<String> _getXLabels(String range, int dataLength) {
     switch (range) {
       case "Day":
-        return ['12AM', '2AM', '4AM', '6AM', '8AM', '10AM', '12PM', '2PM', '4PM', '6PM', '8PM', '10PM'];
+        return ['12AM', '4AM', '8AM', '12PM', '4PM', '8PM'];
       case "Week":
         return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
       case "Month":
         return ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
       case "Year":
-        return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov'];
       default:
         return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     }
@@ -243,13 +226,13 @@ class ThreatTimelineChart extends StatelessWidget {
   List<int> _getLabelIndices(int dataLength, String range) {
     switch (range) {
       case "Day":
-        return [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
+        return [0, 4, 8, 12, 16, 20];
       case "Week":
         return List.generate(7, (i) => i);
       case "Month":
         return [0, 7, 14, 21];
       case "Year":
-        return List.generate(12, (i) => i);
+        return [0, 2, 4, 6, 8, 10];
       default:
         return List.generate(7, (i) => i);
     }
@@ -266,7 +249,7 @@ class ThreatTimelineChart extends StatelessWidget {
   }
 
   double _getInterval(int dataLength, String range) {
-    if (range == "Day") return 2.0;
+    if (range == "Day") return 4.0;
     if (range == "Month") return 7.0;
     if (dataLength > 20) return 4.0;
     if (dataLength > 10) return 2.0;

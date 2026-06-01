@@ -28,24 +28,39 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
-  pdf: ^3.10.7
-  printing: ^5.12.0
   flutter:
     sdk: flutter
 
-  fl_chart: ^0.68.0
-  http: ^1.2.2
-  firebase_core: ^2.32.0
-  flutter_dotenv: ^5.1.0
-
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
+  # UI
   cupertino_icons: ^1.0.8
   provider: ^6.1.5+1
+
+  # PDF SYSTEM (CLEAN & WORKING)
+  pdf: ^3.11.0
+  printing: ^5.12.0
+  path_provider: ^2.1.4
+  permission_handler: ^11.3.1
+  open_file: ^3.5.4
+
+  # NETWORK / BACKEND
+  http: ^1.2.2
+  socket_io_client: ^3.0.2
+
+  # FIREBASE
+  firebase_core: ^2.32.0
   firebase_auth: ^4.17.8
+
+  # ENV
+  flutter_dotenv: ^5.1.0
+
+  # CHARTS
+  fl_chart: ^0.68.0
+
+  # SECURITY
   flutter_secure_storage: ^9.0.0
   local_auth: ^2.3.0
-  socket_io_client: ^3.0.2
+
+  # UTILITIES
   url_launcher: ^6.3.2
   youtube_player_flutter: ^9.0.1
 
