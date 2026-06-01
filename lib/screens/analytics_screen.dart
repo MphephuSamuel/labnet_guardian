@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../utils/colors.dart';
 import '../widgets/analytics/stats_card.dart';
 import '../widgets/analytics/network_traffic_chart.dart';
-import '../widgets/analytics/bandwidth_bar_chart.dart';
+import '../widgets/analytics/bandwidth_line_chart.dart';  // Changed from bandwidth_bar_chart
 import '../widgets/analytics/threat_timeline_chart.dart';
 import '../services/pdf_service.dart';
 import '../services/analytics_service.dart';
@@ -136,7 +136,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       style: TextStyle(color: textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 10),
-                    BandwidthBarChart(
+                    BandwidthLineChart(  // Changed from BandwidthBarChart
                       range: selectedRange,
                       isDarkMode: isDarkMode,
                       bandwidthData: analytics?.bandwidth ?? [],
