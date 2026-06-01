@@ -5,17 +5,46 @@ import '../../utils/colors.dart';
 class BandwidthBarChart extends StatelessWidget {
   final String range;
   final bool isDarkMode;
+  final List<double>? bandwidthData;
 
   const BandwidthBarChart({
     super.key,
     required this.range,
     required this.isDarkMode,
+    this.bandwidthData,
   });
 
   @override
   Widget build(BuildContext context) {
     final cardColor = AppColors.getCardColor(isDarkMode);
     final textColor = AppColors.getTextPrimary(isDarkMode);
+
+    final data = bandwidthData ?? [];
+    final xLabels = _getXLabels(range, data.length);
+    final showIndices = _getLabelIndices(data.length, range);
+
+    final bars = data.isEmpty
+        ? <BarChartGroupData>[]
+        : data.asMap().entries.map((entry) {
+            return BarChartGroupData(
+              x: entry.key,
+              barRods: [
+                BarChartRodData(
+                  toY: entry.value,
+                  width: _getBarWidth(data.length),
+                  borderRadius: BorderRadius.circular(6),
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFF8A5CFF),
+                      Color(0xFFB06CFF),
+                    ],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                  ),
+                ),
+              ],
+            );
+          }).toList();
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -27,86 +56,93 @@ class BandwidthBarChart extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Weekly Bandwidth Usage",
+            "Bandwidth Usage (${_getRangeTitle(range)})",
             style: TextStyle(
               color: textColor,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
           ),
-
           const SizedBox(height: 20),
-
           SizedBox(
-            height: 220,
+            height: 260,
             child: BarChart(
               BarChartData(
                 alignment: BarChartAlignment.spaceAround,
-                maxY: 600,
+                maxY: _getMaxY(data),
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
                   getDrawingHorizontalLine: (value) => FlLine(
-                    color: isDarkMode
-                        ? Colors.white12
-                        : Colors.black12,
+                    color: isDarkMode ? Colors.white12 : Colors.black12,
                     strokeWidth: 1,
                   ),
                 ),
                 titlesData: FlTitlesData(
-  topTitles: const AxisTitles(
-    sideTitles: SideTitles(showTitles: false),
-  ),
-  rightTitles: const AxisTitles(
-    sideTitles: SideTitles(showTitles: false),
-  ),
-
-  leftTitles: AxisTitles(
-    sideTitles: SideTitles(
-      showTitles: true,
-      interval: 1,
-      getTitlesWidget: (value, _) {
-        return Text(
-          value.toInt().toString(),
-          style: const TextStyle(fontSize: 10),
-        );
-      },
-    ),
-  ),
-
-  bottomTitles: AxisTitles(
-    sideTitles: SideTitles(
-      showTitles: true,
-      getTitlesWidget: (value, _) {
-        const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-        return Text(labels[value.toInt() % 7]);
-      },
-    ),
-  ),
-),
-
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 40,
+                      getTitlesWidget: (value, meta) {
+                        return Text(
+                          value.toInt().toString(),
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: 10,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 45,
+                      interval: _getInterval(data.length, range),
+                      getTitlesWidget: (value, meta) {
+                        final index = value.toInt();
+                        if (showIndices.contains(index) && index < xLabels.length) {
+                          return Transform.rotate(
+                            angle: _getRotationAngle(range),
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                xLabels[index],
+                                style: TextStyle(
+                                  color: textColor,
+                                  fontSize: _getFontSize(range),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          );
+                        }
+                        return const Text('');
+                      },
+                    ),
+                  ),
+                ),
                 barTouchData: BarTouchData(
                   touchTooltipData: BarTouchTooltipData(
-                    getTooltipColor: (group) => Colors.black,
-tooltipRoundedRadius: 8,
+                    getTooltipColor: (_) => Colors.black,
+                    tooltipRoundedRadius: 8,
                     getTooltipItem: (group, _, rod, __) {
+                      final index = group.x;
+                      final label = index < xLabels.length ? xLabels[index] : '';
                       return BarTooltipItem(
-                        "${rod.toY} GB",
-                        const TextStyle(color: Colors.white),
+                        "$label: ${rod.toY.toStringAsFixed(1)} MB/s",
+                        const TextStyle(color: Colors.white, fontSize: 12),
                       );
                     },
                   ),
                 ),
-
-                barGroups: [
-                  _bar(0, 450),
-                  _bar(1, 380),
-                  _bar(2, 520),
-                  _bar(3, 470),
-                  _bar(4, 300),
-                  _bar(5, 200),
-                  _bar(6, 310),
-                ],
+                barGroups: bars,
               ),
             ),
           ),
@@ -115,24 +151,73 @@ tooltipRoundedRadius: 8,
     );
   }
 
-  BarChartGroupData _bar(int x, double y) {
-    return BarChartGroupData(
-      x: x,
-      barRods: [
-        BarChartRodData(
-          toY: y,
-          width: 14,
-          borderRadius: BorderRadius.circular(6),
-          gradient: const LinearGradient(
-            colors: [
-              Color(0xFF8A5CFF),
-              Color(0xFFB06CFF),
-            ],
-            begin: Alignment.bottomCenter,
-            end: Alignment.topCenter,
-          ),
-        ),
-      ],
-    );
+  List<String> _getXLabels(String range, int dataLength) {
+    switch (range) {
+      case "Day":
+        return ['12AM', '2AM', '4AM', '6AM', '8AM', '10AM', '12PM', '2PM', '4PM', '6PM', '8PM', '10PM'];
+      case "Week":
+        return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      case "Month":
+        return ['Day 1', 'Day 6', 'Day 11', 'Day 16', 'Day 21', 'Day 26'];
+      case "Year":
+        return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      default:
+        return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    }
+  }
+
+  List<int> _getLabelIndices(int dataLength, String range) {
+    switch (range) {
+      case "Day":
+        return List.generate(12, (i) => i * 2);
+      case "Week":
+        return List.generate(7, (i) => i);
+      case "Month":
+        return [0, 5, 10, 15, 20, 25];
+      case "Year":
+        return List.generate(12, (i) => i);
+      default:
+        return List.generate(7, (i) => i);
+    }
+  }
+
+  String _getRangeTitle(String range) {
+    switch (range) {
+      case "Day": return "Last 24 Hours";
+      case "Week": return "Last 7 Days";
+      case "Month": return "Last 30 Days";
+      case "Year": return "Last 12 Months";
+      default: return "Last 7 Days";
+    }
+  }
+
+  double _getBarWidth(int dataLength) {
+    if (dataLength > 20) return 6;
+    if (dataLength > 10) return 10;
+    return 18;
+  }
+
+  double _getMaxY(List<double> data) {
+    if (data.isEmpty) return 100;
+    final maxValue = data.reduce((a, b) => a > b ? a : b);
+    return maxValue + (maxValue * 0.2);
+  }
+
+  double _getInterval(int dataLength, String range) {
+    if (range == "Day") return 2;
+    if (range == "Month") return 5;
+    if (dataLength > 20) return 4;
+    if (dataLength > 10) return 2;
+    return 1;
+  }
+
+  double _getRotationAngle(String range) {
+    if (range == "Day" || range == "Month") return -0.3;
+    return 0;
+  }
+
+  double _getFontSize(String range) {
+    if (range == "Day" || range == "Month") return 9;
+    return 10;
   }
 }

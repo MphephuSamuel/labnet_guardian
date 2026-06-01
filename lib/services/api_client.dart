@@ -53,4 +53,36 @@ class ApiClient {
       rethrow;
     }
   }
+
+  static Future<http.Response> put(String path, dynamic body) async {
+    final url = Uri.parse('$baseUrl$path');
+    try {
+      final response = await http.put(
+        url,
+        headers: _headers(),
+        body: body != null ? jsonEncode(body) : null,
+      );
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        print('PUT $url failed: ${response.statusCode} ${response.body}');
+      }
+      return response;
+    } catch (e) {
+      print('PUT request error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<http.Response> delete(String path) async {
+    final url = Uri.parse('$baseUrl$path');
+    try {
+      final response = await http.delete(url, headers: _headers());
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        print('DELETE $url failed: ${response.statusCode} ${response.body}');
+      }
+      return response;
+    } catch (e) {
+      print('DELETE request error: $e');
+      rethrow;
+    }
+  }
 }

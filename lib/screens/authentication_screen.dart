@@ -23,8 +23,9 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen>
     // Retrieve and print the token for debugging purposes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      authProvider.loadToken(); // Load the token to ensure it is available
-      debugPrint('Token: ${authProvider.token}');
+      authProvider.loadToken().then((_) {
+        debugPrint('Token: ${authProvider.token}');
+      }); // Load the token to ensure it is available
     });
 
     _controller = AnimationController(
