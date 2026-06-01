@@ -19,7 +19,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
   void initState() {
     super.initState();
     _controller = YoutubePlayerController(
-      initialVideoId: 'ZaK9Wi5ho0o&list=RDAwnfjcDCCmE&index=4',
+      initialVideoId: 'ZaK9Wi5ho0o&list',
       flags: const YoutubePlayerFlags(
         autoPlay: false,
         mute: false,
