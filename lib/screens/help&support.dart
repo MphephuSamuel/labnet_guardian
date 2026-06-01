@@ -19,7 +19,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
   void initState() {
     super.initState();
     _controller = YoutubePlayerController(
-      initialVideoId: 'dQw4w9WgXcQ',
+      initialVideoId: 'ZaK9Wi5ho0o&list=RDAwnfjcDCCmE&index=4',
       flags: const YoutubePlayerFlags(
         autoPlay: false,
         mute: false,
@@ -144,7 +144,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
   Widget _buildContactButton(IconData icon, String label) {
     String? info;
     if (label == 'Email') {
-      info = 'labnet@gmail.com';
+      info = 'khumalosibekezelo6@gmail.com';
     } else if (label == 'Call') {
       info = '0116000000';
     }
@@ -152,7 +152,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
     return GestureDetector(
       onTap: () async {
         if (label == 'Email') {
-          final email = Uri.parse('mailto:labnet@gmail.com');
+          final email = Uri.parse('mailto:khumalosibekezelo6@gmail.com');
           if (await canLaunchUrl(email)) {
             await launchUrl(email);
           }
@@ -277,7 +277,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
   Widget _buildTroubleshootingSection(bool isDark) {
     return GestureDetector(
       onTap: () async {
-        final url = Uri.parse('https://github.com/MphephuSamuel/labnet_guardian');
+        final url = Uri.parse('https://labnettroubleshooting.netlify.app/');
         if (await canLaunchUrl(url)) {
           await launchUrl(url, mode: LaunchMode.externalApplication);
         }
