@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../layout/main_layout.dart';
 import 'biometric_screen.dart';
 import '../providers/auth_provider.dart';
 
@@ -19,8 +17,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
-  String? _token;
-  bool _tokenCopied = false;
 
   @override
   void dispose() {
@@ -35,8 +31,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() {
       _errorMessage = null;
-      _token = null;
-      _tokenCopied = false;
     });
 
     if (email.isEmpty || password.isEmpty) {
@@ -54,16 +48,19 @@ class _LoginScreenState extends State<LoginScreen> {
       await authProvider.signIn(email, password);
       if (!mounted) return;
 
-      setState(() {
-        _isLoading = false;
-        _token = authProvider.token;
-      });
-
-      if (_token == null || _token!.isEmpty) {
+      if (authProvider.token == null || authProvider.token!.isEmpty) {
         setState(() {
+          _isLoading = false;
           _errorMessage = 'Login succeeded, but no backend token was returned.';
         });
+        return;
       }
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      _proceedToApp();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -71,23 +68,6 @@ class _LoginScreenState extends State<LoginScreen> {
         _errorMessage = e.toString();
       });
     }
-  }
-
-  Future<void> _copyToken() async {
-    if (_token == null || _token!.isEmpty) return;
-
-    await Clipboard.setData(ClipboardData(text: _token!));
-    if (!mounted) return;
-
-    setState(() {
-      _tokenCopied = true;
-    });
-
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        const SnackBar(content: Text('Token copied to clipboard')),
-      );
   }
 
   void _proceedToApp() {
@@ -335,90 +315,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                       ),
                     ),
-                    if (_token != null && _token!.isNotEmpty) ...[
-                      const SizedBox(height: 20),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF5F5FC),
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: const Color(0xFFE2DDF2)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Firebase ID Token',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF1A1A2E),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            SelectableText(
-                              _token!,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF4B4B63),
-                                height: 1.4,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton.icon(
-                                    onPressed: _copyToken,
-                                    icon: const Icon(Icons.copy_rounded),
-                                    label: const Text('Copy Token'),
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: const Color(0xFF7B2FBE),
-                                      side: const BorderSide(
-                                        color: Color(0xFF7B2FBE),
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(50),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: ElevatedButton(
-                                    onPressed: _tokenCopied
-                                        ? _proceedToApp
-                                        : null,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF7B2FBE),
-                                      foregroundColor: Colors.white,
-                                      disabledBackgroundColor: const Color(
-                                        0xFFBCA6D8,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(50),
-                                      ),
-                                    ),
-                                    child: const Text('Proceed'),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (!_tokenCopied) ...[
-                              const SizedBox(height: 10),
-                              const Text(
-                                'Copy the token first, then proceed to the app.',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF9E9EB8),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ],
                     const SizedBox(height: 16),
                     Center(
                       child: TextButton(
