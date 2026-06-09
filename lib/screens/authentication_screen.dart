@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../layout/main_layout.dart';
-import '../providers/auth_provider.dart';
 
 class AuthSuccessScreen extends StatefulWidget {
   const AuthSuccessScreen({super.key});
@@ -20,14 +18,6 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen>
   void initState() {
     super.initState();
 
-    // Retrieve and print the token for debugging purposes
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      authProvider.loadToken().then((_) {
-        debugPrint('Token: ${authProvider.token}');
-      }); // Load the token to ensure it is available
-    });
-
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 700),
@@ -42,8 +32,8 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen>
 
     _controller.forward();
 
-    // ── Auto-redirect to the dashboard tab after 2.5 seconds ──
-    Future.delayed(const Duration(milliseconds: 2500), () {
+    // ── Auto-redirect to the dashboard tab after a short confirmation pause ──
+    Future.delayed(const Duration(milliseconds: 1000), () {
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -61,8 +51,6 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen>
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-
     return Scaffold(
       backgroundColor: const Color(0xFFEFEEF8),
       body: SafeArea(
@@ -124,7 +112,6 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen>
                   'Redirecting to dashboard...',
                   style: TextStyle(fontSize: 14, color: Color(0xFF9E9EB8)),
                 ),
-
               ],
             ),
           ),

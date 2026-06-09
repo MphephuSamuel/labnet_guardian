@@ -1,10 +1,8 @@
-
 import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import '../services/biometric_service.dart';
 import '../screens/authentication_screen.dart';
-import '../layout/main_layout.dart';
 import '../providers/auth_provider.dart';
 
 class BiometricScreen extends StatefulWidget {
@@ -17,7 +15,10 @@ class BiometricScreen extends StatefulWidget {
 class _BiometricScreenState extends State<BiometricScreen> {
   final BiometricService _biometricService = BiometricService();
   bool _isLoading = false;
+  bool _isLoadingCapabilities = true;
+  bool _isDeviceSupported = true;
   String? _errorMessage;
+  String? _supportMessage;
   List<BiometricType> _availableBiometrics = [];
 
   @override
@@ -27,9 +28,22 @@ class _BiometricScreenState extends State<BiometricScreen> {
   }
 
   Future<void> _loadAvailableBiometrics() async {
-    final biometrics = await _biometricService.getAvailableBiometrics();
+    final bool isSupported = await _biometricService.isDeviceSupported();
+    final biometrics = isSupported
+        ? await _biometricService.getAvailableBiometrics()
+        : <BiometricType>[];
+
     if (mounted) {
-      setState(() => _availableBiometrics = biometrics);
+      setState(() {
+        _isDeviceSupported = isSupported;
+        _availableBiometrics = biometrics;
+        _isLoadingCapabilities = false;
+        _supportMessage = !isSupported
+            ? 'This device does not support biometric authentication. You cannot use this app on this phone.'
+            : biometrics.isEmpty
+            ? 'Biometrics are not set up on this device. Please enable fingerprint or face recognition in Settings to continue.'
+            : null;
+      });
     }
   }
 
@@ -44,8 +58,8 @@ class _BiometricScreenState extends State<BiometricScreen> {
       _errorMessage = null;
     });
 
-    final BiometricResult result =
-        await _biometricService.authenticateWithBiometrics();
+    final BiometricResult result = await _biometricService
+        .authenticateWithBiometrics();
 
     if (!mounted) return;
 
@@ -63,7 +77,8 @@ class _BiometricScreenState extends State<BiometricScreen> {
         if (!mounted) return;
         setState(() {
           _isLoading = false;
-          _errorMessage = 'Biometrics accepted, but could not authenticate session: $e';
+          _errorMessage =
+              'Biometrics accepted, but could not authenticate session: $e';
         });
       }
     } else {
@@ -73,13 +88,6 @@ class _BiometricScreenState extends State<BiometricScreen> {
             result.errorMessage ?? 'Biometric authentication failed';
       });
     }
-  }
-
-  void _skip() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const MainLayout(initialIndex: 0)),
-    );
   }
 
   @override
@@ -118,8 +126,8 @@ class _BiometricScreenState extends State<BiometricScreen> {
                   _hasFaceID && _hasFingerprint
                       ? Icons.security
                       : _hasFaceID
-                          ? Icons.face_retouching_natural
-                          : Icons.fingerprint,
+                      ? Icons.face_retouching_natural
+                      : Icons.fingerprint,
                   size: 90,
                   color: Colors.white,
                 ),
@@ -152,6 +160,13 @@ class _BiometricScreenState extends State<BiometricScreen> {
                 ),
               ),
 
+              if (_isLoadingCapabilities) ...[
+                const SizedBox(height: 28),
+                const CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF9B59B6)),
+                ),
+              ],
+
               const Spacer(),
 
               // ── Error Message ──
@@ -168,8 +183,41 @@ class _BiometricScreenState extends State<BiometricScreen> {
                   ),
                 ),
 
+              if (_supportMessage != null)
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8F4FC),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFE2DDF2)),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.info_outline_rounded,
+                        color: Color(0xFF7B2FBE),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _supportMessage!,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            height: 1.5,
+                            color: Color(0xFF4B4B63),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
               // ── Fingerprint Button (shown if available) ──
-              if (_hasFingerprint) ...[
+              if (_isDeviceSupported && _hasFingerprint) ...[
                 _buildGradientButton(
                   icon: Icons.fingerprint,
                   label: 'Use Fingerprint',
@@ -179,20 +227,10 @@ class _BiometricScreenState extends State<BiometricScreen> {
               ],
 
               // ── Face ID Button (shown if available) ──
-              if (_hasFaceID) ...[
+              if (_isDeviceSupported && _hasFaceID) ...[
                 _buildGradientButton(
                   icon: Icons.face_retouching_natural,
                   label: 'Use Face ID',
-                  onPressed: _isLoading ? null : _authenticate,
-                ),
-                const SizedBox(height: 14),
-              ],
-
-              // ── Fallback if no biometrics detected yet ──
-              if (!_hasFingerprint && !_hasFaceID) ...[
-                _buildGradientButton(
-                  icon: Icons.security,
-                  label: 'Authenticate with Biometrics',
                   onPressed: _isLoading ? null : _authenticate,
                 ),
                 const SizedBox(height: 14),
@@ -208,31 +246,6 @@ class _BiometricScreenState extends State<BiometricScreen> {
                     ),
                   ),
                 ),
-
-              // ── Skip for Now Button ──
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _skip,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    shadowColor: Colors.transparent,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                  ),
-                  child: const Text(
-                    'Skip for Now',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF9E9EB8),
-                    ),
-                  ),
-                ),
-              ),
 
               const SizedBox(height: 40),
             ],
