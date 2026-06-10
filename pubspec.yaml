@@ -42,7 +42,7 @@ dependencies:
 
   # UTILITIES
   url_launcher: ^6.3.2
-  youtube_player_flutter: ^9.0.1
+  flutter_inappwebview: ^6.0.0
 
 dev_dependencies:
   flutter_test:
