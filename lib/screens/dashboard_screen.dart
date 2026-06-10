@@ -221,7 +221,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildNetworkActivityCard() {
     final usagePercent = ((analytics?.averageBandwidth ?? 0) / 100).clamp(0.0, 1.0);
-    final dailyTraffic = ((analytics?.averageBandwidth ?? 0) * 24).toStringAsFixed(0);
     
     return Container(
       width: double.infinity,
@@ -265,20 +264,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(height: 4),
                     const Text('Bandwidth Usage',
-                        style: TextStyle(color: Colors.white70, fontSize: 12)),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '$dailyTraffic GB',
-                      style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text('Daily Traffic',
                         style: TextStyle(color: Colors.white70, fontSize: 12)),
                   ],
                 ),
