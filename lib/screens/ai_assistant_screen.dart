@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../widgets/ai_assistant/chat_bubble.dart';
-import '../widgets/ai_assistant/quick_action_card.dart';
 import '../widgets/ai_assistant/chat_input_field.dart';
 import '../services/ai_service.dart';
 
@@ -118,68 +117,9 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
           child: ListView.builder(
             controller: _scrollController,
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            itemCount: _messages.length + 1, // +1 for the Quick Actions which we'll insert after the first message
+            itemCount: _messages.length,
             itemBuilder: (context, index) {
-              if (index == 1 && _messages.length == 1) {
-                // Show Quick Actions only when there's just the initial greeting
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 16),
-                    Text(
-                      'Quick Actions',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade500,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
-                      childAspectRatio: 2.2,
-                      children: [
-                        QuickActionCard(
-                          title: 'Network Status',
-                          icon: Icons.language,
-                          iconColor: Colors.blue,
-                          onTap: () => _sendMessage('Show me the network status'),
-                        ),
-                        QuickActionCard(
-                          title: 'Device Issues',
-                          icon: Icons.phone_android,
-                          iconColor: Theme.of(context).iconTheme.color ?? Colors.black87,
-                          onTap: () => _sendMessage('Are there any device issues?'),
-                        ),
-                        QuickActionCard(
-                          title: 'Security Overview',
-                          icon: Icons.lock_outline,
-                          iconColor: Colors.orange,
-                          onTap: () => _sendMessage('Give me a security overview'),
-                        ),
-                        QuickActionCard(
-                          title: 'Traffic Stats',
-                          icon: Icons.bar_chart,
-                          iconColor: Colors.green,
-                          onTap: () => _sendMessage('Show me the traffic stats'),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-                );
-              }
-
-              // Adjust index to skip the Quick Actions widget position if it's shown
-              final messageIndex = (index > 0 && _messages.length == 1) ? index - 1 : index;
-              
-              if (messageIndex >= _messages.length) return const SizedBox.shrink();
-
-              final msg = _messages[messageIndex];
+              final msg = _messages[index];
               return ChatBubble(
                 text: msg['text'],
                 time: msg['time'],
