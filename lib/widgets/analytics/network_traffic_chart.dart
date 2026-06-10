@@ -18,20 +18,24 @@ class NetworkTrafficChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final cardColor = AppColors.getCardColor(isDarkMode);
     final textColor = AppColors.getTextPrimary(isDarkMode);
+    final textSecondary = AppColors.getTextSecondary(isDarkMode);
 
     final data = trafficData ?? [];
-    final xLabels = _getXLabels(range, data.length);
-    final showIndices = _getLabelIndices(data.length, range);
     
-    final maxValue = data.isEmpty ? 100 : data.reduce((a, b) => a > b ? a : b);
-    final yMax = maxValue > 0 ? maxValue * 1.2 : 100;
+    // Check if there's any actual data (non-zero values)
+    final hasData = data.any((value) => value > 0);
+    
+    // Calculate Y-axis max based on real data only
+    final maxValue = hasData ? data.reduce((a, b) => a > b ? a : b) : 0;
+    final yMax = maxValue > 0 ? maxValue * 1.2 : 100.0;
+    
+    final xLabels = _getXLabels(range, data.length);
+    final showingLabels = _getShowingLabels(range, data.length);
 
-    final spots = data.isEmpty
-        ? <FlSpot>[]
-        : List.generate(
-            data.length,
-            (i) => FlSpot(i.toDouble(), data[i]),
-          );
+    final spots = List.generate(
+      data.length,
+      (i) => FlSpot(i.toDouble(), data[i]),
+    );
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -54,138 +58,145 @@ class NetworkTrafficChart extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                "Network Traffic (${_getRangeTitle(range)})",
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                "Network Traffic",
+                style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ],
           ),
+          const SizedBox(height: 8),
+          Text(
+            "Network download/upload speed in MB/s",
+            style: TextStyle(color: textSecondary, fontSize: 10),
+          ),
           const SizedBox(height: 20),
-          SizedBox(
-            height: 260,
-            child: LineChart(
-              LineChartData(
-                minY: 0,
-                maxY: yMax.toDouble(),
-                clipData: FlClipData.all(),
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  horizontalInterval: yMax / 4,
-                  getDrawingHorizontalLine: (value) => FlLine(
-                    color: isDarkMode ? Colors.white12 : Colors.black12,
-                    strokeWidth: 1,
-                  ),
+          
+          // Show No Data message if no data exists
+          if (!hasData)
+            Container(
+              height: 260,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.show_chart, size: 48, color: textSecondary),
+                    const SizedBox(height: 16),
+                    Text(
+                      "No network traffic data available",
+                      style: TextStyle(color: textSecondary, fontSize: 14),
+                    ),
+                    Text(
+                      "Data will appear once traffic is detected",
+                      style: TextStyle(color: textSecondary, fontSize: 12),
+                    ),
+                  ],
                 ),
-                titlesData: FlTitlesData(
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 40,
-                      interval: _getInterval(data.length, range),
-                      getTitlesWidget: (value, meta) {
-                        final index = value.toInt();
-                        if (showIndices.contains(index) && index < xLabels.length) {
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 12),
-                            child: Text(
-                              xLabels[index],
-                              style: TextStyle(
-                                color: textColor,
-                                fontSize: _getFontSize(range),
+              ),
+            )
+          else
+            SizedBox(
+              height: 260,
+              child: LineChart(
+                LineChartData(
+                  minY: 0,
+                  maxY: yMax,
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    getDrawingHorizontalLine: (value) => FlLine(
+                      color: isDarkMode ? Colors.white24 : Colors.black12,
+                      strokeWidth: 1,
+                    ),
+                  ),
+                  titlesData: FlTitlesData(
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 35,
+                        interval: 1,
+                        getTitlesWidget: (value, meta) {
+                          final index = value.toInt();
+                          if (index >= 0 && index < xLabels.length && showingLabels.contains(index)) {
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                xLabels[index],
+                                style: TextStyle(color: textColor, fontSize: 10),
                               ),
-                              textAlign: TextAlign.center,
-                            ),
+                            );
+                          }
+                          return const Text('');
+                        },
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 45,
+                        getTitlesWidget: (value, meta) {
+                          return Text(
+                            '${value.toInt()}',
+                            style: TextStyle(color: textColor, fontSize: 10),
                           );
-                        }
-                        return const Text('');
+                        },
+                      ),
+                    ),
+                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  ),
+                  borderData: FlBorderData(
+                    show: true,
+                    border: Border.all(color: isDarkMode ? Colors.white24 : Colors.black12, width: 1),
+                  ),
+                  lineTouchData: LineTouchData(
+                    enabled: true,
+                    touchTooltipData: LineTouchTooltipData(
+                      getTooltipColor: (touchedSpot) => Colors.black,
+                      getTooltipItems: (touchedSpots) {
+                        return touchedSpots.map((touchedSpot) {
+                          final index = touchedSpot.x.toInt();
+                          final label = index < xLabels.length ? xLabels[index] : '';
+                          return LineTooltipItem(
+                            '$label: ${touchedSpot.y.toStringAsFixed(1)} MB/s',
+                            const TextStyle(color: Colors.white, fontSize: 12),
+                          );
+                        }).toList();
                       },
                     ),
                   ),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 45,
-                      interval: yMax / 4,
-                      getTitlesWidget: (value, meta) {
-                        return Text(
-                          value.toInt().toString(),
-                          style: TextStyle(
-                            color: textColor,
-                            fontSize: 10,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                ),
-                borderData: FlBorderData(
-                  show: true,
-                  border: Border.all(
-                    color: isDarkMode ? Colors.white24 : Colors.black12,
-                    width: 0.5,
-                  ),
-                ),
-                lineTouchData: LineTouchData(
-                  touchTooltipData: LineTouchTooltipData(
-                    getTooltipColor: (touchedSpot) => Colors.black,
-                    getTooltipItems: (touchedSpots) {
-                      return touchedSpots.map((touchedSpot) {
-                        final index = touchedSpot.x.toInt();
-                        final label = index < xLabels.length ? xLabels[index] : '';
-                        return LineTooltipItem(
-                          '$label: ${touchedSpot.y.toStringAsFixed(1)} MB/s',
-                          const TextStyle(color: Colors.white, fontSize: 12),
-                        );
-                      }).toList();
-                    },
-                  ),
-                ),
-                lineBarsData: spots.isEmpty
-                    ? []
-                    : [
-                        LineChartBarData(
-                          spots: spots,
-                          isCurved: true,
-                          curveSmoothness: 0.3,
-                          color: const Color(0xFF6C63FF),
-                          barWidth: 3,
-                          dotData: FlDotData(
-                            show: true,
-                            getDotPainter: (spot, percent, barData, index) {
-                              return FlDotCirclePainter(
-                                radius: 4,
-                                color: const Color(0xFF6C63FF),
-                                strokeWidth: 2,
-                                strokeColor: Colors.white,
-                              );
-                            },
-                          ),
-                          belowBarData: BarAreaData(
-                            show: true,
-                            gradient: LinearGradient(
-                              colors: [
-                                const Color(0xFF6C63FF).withOpacity(0.3),
-                                Colors.transparent,
-                              ],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                            ),
-                          ),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: spots,
+                      isCurved: true,
+                      curveSmoothness: 0.3,
+                      color: const Color(0xFF6C63FF),
+                      barWidth: 3,
+                      dotData: FlDotData(
+                        show: true,
+                        getDotPainter: (spot, percent, barData, index) {
+                          return FlDotCirclePainter(
+                            radius: 3,
+                            color: const Color(0xFF6C63FF),
+                            strokeWidth: 1,
+                            strokeColor: Colors.white,
+                          );
+                        },
+                      ),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color(0xFF6C63FF).withOpacity(0.3),
+                            Colors.transparent,
+                          ],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
                         ),
-                      ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -198,7 +209,7 @@ class NetworkTrafficChart extends StatelessWidget {
       case "Week":
         return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
       case "Month":
-        return ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+        return ['Day 1', 'Day 6', 'Day 11', 'Day 16', 'Day 21', 'Day 26'];
       case "Year":
         return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       default:
@@ -206,41 +217,18 @@ class NetworkTrafficChart extends StatelessWidget {
     }
   }
 
-  List<int> _getLabelIndices(int dataLength, String range) {
+  List<int> _getShowingLabels(String range, int dataLength) {
     switch (range) {
       case "Day":
-        return List.generate(12, (i) => i * 2);
+        return [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
       case "Week":
-        return List.generate(7, (i) => i);
+        return [0, 1, 2, 3, 4, 5, 6];
       case "Month":
-        return [0, 7, 14, 21];
+        return [0, 5, 10, 15, 20, 25];
       case "Year":
-        return List.generate(12, (i) => i);
+        return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
       default:
-        return List.generate(7, (i) => i);
+        return [0, 1, 2, 3, 4, 5, 6];
     }
-  }
-
-  String _getRangeTitle(String range) {
-    switch (range) {
-      case "Day": return "Last 24 Hours";
-      case "Week": return "Last 7 Days";
-      case "Month": return "Last 30 Days";
-      case "Year": return "Last 12 Months";
-      default: return "Last 7 Days";
-    }
-  }
-
-  double _getInterval(int dataLength, String range) {
-    if (range == "Day") return 2;
-    if (range == "Month") return 7;
-    if (dataLength > 20) return 4;
-    if (dataLength > 10) return 2;
-    return 1;
-  }
-
-  double _getFontSize(String range) {
-    if (range == "Day" || range == "Month") return 9;
-    return 10;
   }
 }

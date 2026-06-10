@@ -93,49 +93,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 const SizedBox(height: 12),
 
-                // ── Header with User and Notification ──
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                // ── Header with User (No Notification Icon) ──
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Welcome back,',
-                            style: TextStyle(fontSize: 13, color: textSecondary)),
-                        const SizedBox(height: 4),
-                        Text(
-                          userName ?? 'Admin',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                            color: textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: cardBg,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Stack(
-                        children: [
-                          const Icon(Icons.notifications_none, size: 24),
-                          if ((analytics?.threatsBlocked ?? 0) > 0)
-                            Positioned(
-                              right: 0,
-                              top: 0,
-                              child: Container(
-                                width: 10,
-                                height: 10,
-                                decoration: const BoxDecoration(
-                                  color: Colors.red,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ),
-                        ],
+                    Text('Welcome back,',
+                        style: TextStyle(fontSize: 13, color: textSecondary)),
+                    const SizedBox(height: 4),
+                    Text(
+                      userName ?? 'Admin',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        color: textPrimary,
                       ),
                     ),
                   ],
@@ -143,7 +113,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                 const SizedBox(height: 24),
 
-                // ── 4 Stat Cards ──
+                // ── 4 Stat Cards (No Percentage Indicators) ──
                 if (isLoading)
                   const Center(child: CircularProgressIndicator())
                 else
@@ -166,7 +136,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                 const SizedBox(height: 24),
 
-                // ── Quick Actions (compact version) ──
+                // ── Quick Actions ──
                 _buildQuickActionsSection(textPrimary),
 
                 const SizedBox(height: 40),
@@ -194,8 +164,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 iconBg: const Color(0xFF8B3DCA).withOpacity(0.15),
                 value: analytics?.activeDevices.toString() ?? '0',
                 label: 'Total Devices',
-                delta: _formatChange((analytics?.activeDevicesChange ?? 0).toDouble()),
-                isPositive: (analytics?.activeDevicesChange ?? 0) >= 0,
               ),
             ),
             const SizedBox(width: 14),
@@ -210,8 +178,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 iconBg: const Color(0xFF2EAD60).withOpacity(0.15),
                 value: '${analytics?.averageBandwidth.toStringAsFixed(0) ?? 0}',
                 label: 'Avg Bandwidth',
-                delta: _formatChange((analytics?.averageBandwidthChange ?? 0).toDouble()),
-                isPositive: (analytics?.averageBandwidthChange ?? 0) >= 0,
                 suffix: ' MB/s',
               ),
             ),
@@ -231,8 +197,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 iconBg: const Color(0xFFFFB347).withOpacity(0.15),
                 value: analytics?.threatsBlocked.toString() ?? '0',
                 label: 'Threats Blocked',
-                delta: _formatChange((analytics?.threatsChange ?? 0).toDouble()),
-                isPositive: (analytics?.threatsChange ?? 0) >= 0,
               ),
             ),
             const SizedBox(width: 14),
@@ -247,8 +211,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 iconBg: Colors.redAccent.withOpacity(0.15),
                 value: analytics?.anomalies.toString() ?? '0',
                 label: 'Anomalies',
-                delta: _formatChange((analytics?.anomaliesChange ?? 0).toDouble()),
-                isPositive: (analytics?.anomaliesChange ?? 0) >= 0,
               ),
             ),
           ],
@@ -571,7 +533,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-// ── Stat Card Widget ──
+// ── Stat Card Widget (No Percentage/Delta) ──
 class _StatCard extends StatelessWidget {
   final bool isDark;
   final Color cardBg;
@@ -582,8 +544,6 @@ class _StatCard extends StatelessWidget {
   final Color iconBg;
   final String value;
   final String label;
-  final String delta;
-  final bool isPositive;
   final String? suffix;
 
   const _StatCard({
@@ -596,8 +556,6 @@ class _StatCard extends StatelessWidget {
     required this.iconBg,
     required this.value,
     required this.label,
-    required this.delta,
-    required this.isPositive,
     this.suffix,
   });
 
@@ -643,25 +601,6 @@ class _StatCard extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(label, style: TextStyle(fontSize: 12, color: textSecondary)),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(
-                isPositive ? Icons.trending_up : Icons.trending_down,
-                size: 14,
-                color: isPositive ? const Color(0xFF2EAD60) : Colors.redAccent,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                delta,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: isPositive ? const Color(0xFF2EAD60) : Colors.redAccent,
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );
