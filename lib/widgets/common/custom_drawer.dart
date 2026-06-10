@@ -19,6 +19,7 @@ class CustomDrawer extends StatelessWidget {
     final isDark = themeProvider.isDarkMode;
     final userProvider = Provider.of<UserProvider>(context);
     final profile = userProvider.profile;
+    final isSuperAdmin = profile?.role.trim().toLowerCase() == 'superadmin';
     final avatar = profile?.avatar ?? 'A';
     final avatarInitial = avatar.isNotEmpty ? avatar[0].toUpperCase() : 'A';
 
@@ -196,22 +197,25 @@ class CustomDrawer extends StatelessWidget {
                       );
                     },
                   ),
-                  _buildMenuItem(
-                    icon: Icons.group_outlined,
-                    title: 'Users',
-                    iconBgColor: const Color(0xFF10B981).withValues(alpha: 0.1),
-                    iconColor: const Color(0xFF10B981),
-                    textColor: textColor,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const UsersScreen(),
-                        ),
-                      );
-                    },
-                  ),
+                  if (isSuperAdmin)
+                    _buildMenuItem(
+                      icon: Icons.group_outlined,
+                      title: 'Users',
+                      iconBgColor: const Color(
+                        0xFF10B981,
+                      ).withValues(alpha: 0.1),
+                      iconColor: const Color(0xFF10B981),
+                      textColor: textColor,
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const UsersScreen(),
+                          ),
+                        );
+                      },
+                    ),
                   _buildMenuItem(
                     icon: Icons.help_outline,
                     title: 'Help & Support',

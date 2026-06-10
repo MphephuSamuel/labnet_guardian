@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/app_user.dart';
+import '../layout/main_layout.dart';
 import '../providers/theme_provider.dart';
+import '../providers/user_provider.dart';
 import '../services/users_service.dart';
 import '../utils/colors.dart';
 
@@ -18,6 +20,7 @@ class _UsersScreenState extends State<UsersScreen> {
 
   bool _isLoading = true;
   bool _isSubmitting = false;
+  bool _redirectingToDashboard = false;
   String? _error;
   List<AppUser> _users = [];
 
@@ -58,25 +61,11 @@ class _UsersScreenState extends State<UsersScreen> {
   }
 
   void _showAddAdminSheet() {
-    final formKey = GlobalKey<FormState>();
-    final firstNameController = TextEditingController();
-    final secondNameController = TextEditingController();
-    final lastNameController = TextEditingController();
-    final roleController = TextEditingController(text: 'admin');
-    final emailController = TextEditingController();
-
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
-        final isDark = context.read<ThemeProvider>().isDarkMode;
-        final cardColor = AppColors.getCardColor(isDark);
-        final textColor = AppColors.getTextPrimary(isDark);
-        final borderColor = AppColors.getBorderColor(
-          isDark,
-        ).withValues(alpha: 0.2);
-
         return Padding(
           padding: EdgeInsets.only(
             left: 16,
@@ -84,185 +73,13 @@ class _UsersScreenState extends State<UsersScreen> {
             top: 16,
             bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 16,
           ),
-          child: StatefulBuilder(
-            builder: (context, setModalState) {
-              Future<void> submit() async {
-                if (!formKey.currentState!.validate()) {
-                  return;
-                }
-
-                setModalState(() {
-                  _isSubmitting = true;
-                });
-
-                try {
-                  await _usersService.createAdmin(
-                    firstName: firstNameController.text.trim(),
-                    secondName: secondNameController.text.trim(),
-                    lastName: lastNameController.text.trim(),
-                    role: roleController.text.trim(),
-                    email: emailController.text.trim(),
-                  );
-
-                  if (!mounted) {
-                    return;
-                  }
-
-                  Navigator.of(sheetContext).pop();
-                  ScaffoldMessenger.of(this.context).showSnackBar(
-                    const SnackBar(content: Text('Admin added successfully')),
-                  );
-                  await _loadUsers();
-                } catch (e) {
-                  if (!mounted) {
-                    return;
-                  }
-                  ScaffoldMessenger.of(this.context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        e.toString().replaceFirst('Exception: ', ''),
-                      ),
-                    ),
-                  );
-                } finally {
-                  if (mounted) {
-                    setModalState(() {
-                      _isSubmitting = false;
-                    });
-                  }
-                }
-              }
-
-              return Container(
-                decoration: BoxDecoration(
-                  color: cardColor,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                padding: const EdgeInsets.all(20),
-                child: Form(
-                  key: formKey,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Add Admin User',
-                          style: TextStyle(
-                            color: textColor,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Create a new admin account linked to your backend.',
-                          style: TextStyle(
-                            color: AppColors.getTextSecondary(isDark),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        _buildTextField(
-                          controller: firstNameController,
-                          label: 'First Name',
-                          isDark: isDark,
-                          textColor: textColor,
-                          borderColor: borderColor,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: secondNameController,
-                          label: 'Second Name',
-                          isDark: isDark,
-                          textColor: textColor,
-                          borderColor: borderColor,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: lastNameController,
-                          label: 'Last Name',
-                          isDark: isDark,
-                          textColor: textColor,
-                          borderColor: borderColor,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: roleController,
-                          label: 'Role',
-                          isDark: isDark,
-                          textColor: textColor,
-                          borderColor: borderColor,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          controller: emailController,
-                          label: 'Email',
-                          isDark: isDark,
-                          textColor: textColor,
-                          borderColor: borderColor,
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (value) {
-                            final email = value?.trim() ?? '';
-                            if (email.isEmpty) {
-                              return 'Email is required';
-                            }
-                            final emailPattern = RegExp(
-                              r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
-                            );
-                            if (!emailPattern.hasMatch(email)) {
-                              return 'Enter a valid email address';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 20),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: _isSubmitting ? null : submit,
-                            icon: _isSubmitting
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Icon(Icons.person_add_alt_1),
-                            label: Text(
-                              _isSubmitting ? 'Adding...' : 'Add Admin',
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.iconPurple,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
+          child: _AddAdminBottomSheet(
+            usersService: _usersService,
+            onSuccess: _loadUsers,
           ),
         );
       },
-    ).whenComplete(() {
-      firstNameController.dispose();
-      secondNameController.dispose();
-      lastNameController.dispose();
-      roleController.dispose();
-      emailController.dispose();
-      if (mounted) {
-        setState(() {
-          _isSubmitting = false;
-        });
-      }
-    });
+    );
   }
 
   Widget _buildTextField({
@@ -312,6 +129,38 @@ class _UsersScreenState extends State<UsersScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = context.watch<ThemeProvider>().isDarkMode;
+    final userProvider = context.watch<UserProvider>();
+    final role = userProvider.profile?.role.trim().toLowerCase();
+    final isSuperAdmin = role == 'superadmin';
+
+    if (userProvider.isLoading && userProvider.profile == null) {
+      return Scaffold(
+        backgroundColor: AppColors.getBgColor(isDark),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (!isSuperAdmin) {
+      if (!_redirectingToDashboard) {
+        _redirectingToDashboard = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) {
+            return;
+          }
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (context) => const MainLayout(initialIndex: 0),
+            ),
+            (route) => false,
+          );
+        });
+      }
+
+      return Scaffold(
+        backgroundColor: AppColors.getBgColor(isDark),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppColors.getBgColor(isDark),
@@ -461,6 +310,244 @@ class _UsersScreenState extends State<UsersScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AddAdminBottomSheet extends StatefulWidget {
+  const _AddAdminBottomSheet({
+    required this.usersService,
+    required this.onSuccess,
+  });
+
+  final UsersService usersService;
+  final Future<void> Function() onSuccess;
+
+  @override
+  State<_AddAdminBottomSheet> createState() => _AddAdminBottomSheetState();
+}
+
+class _AddAdminBottomSheetState extends State<_AddAdminBottomSheet> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _secondNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _roleController = TextEditingController(
+    text: 'admin',
+  );
+  final TextEditingController _emailController = TextEditingController();
+
+  bool _isSubmitting = false;
+
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _secondNameController.dispose();
+    _lastNameController.dispose();
+    _roleController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      await widget.usersService.createAdmin(
+        firstName: _firstNameController.text.trim(),
+        secondName: _secondNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        role: _roleController.text.trim(),
+        email: _emailController.text.trim(),
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Admin added successfully')));
+      await widget.onSuccess();
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = context.watch<ThemeProvider>().isDarkMode;
+    final cardColor = AppColors.getCardColor(isDark);
+    final textColor = AppColors.getTextPrimary(isDark);
+    final borderColor = AppColors.getBorderColor(isDark).withValues(alpha: 0.2);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Add Admin User',
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Create a new admin account linked to your backend.',
+                style: TextStyle(color: AppColors.getTextSecondary(isDark)),
+              ),
+              const SizedBox(height: 20),
+              _buildTextField(
+                controller: _firstNameController,
+                label: 'First Name',
+                isDark: isDark,
+                textColor: textColor,
+                borderColor: borderColor,
+              ),
+              const SizedBox(height: 12),
+              _buildTextField(
+                controller: _secondNameController,
+                label: 'Second Name',
+                isDark: isDark,
+                textColor: textColor,
+                borderColor: borderColor,
+              ),
+              const SizedBox(height: 12),
+              _buildTextField(
+                controller: _lastNameController,
+                label: 'Last Name',
+                isDark: isDark,
+                textColor: textColor,
+                borderColor: borderColor,
+              ),
+              const SizedBox(height: 12),
+              _buildTextField(
+                controller: _roleController,
+                label: 'Role',
+                isDark: isDark,
+                textColor: textColor,
+                borderColor: borderColor,
+              ),
+              const SizedBox(height: 12),
+              _buildTextField(
+                controller: _emailController,
+                label: 'Email',
+                isDark: isDark,
+                textColor: textColor,
+                borderColor: borderColor,
+                keyboardType: TextInputType.emailAddress,
+                validator: (value) {
+                  final email = value?.trim() ?? '';
+                  if (email.isEmpty) {
+                    return 'Email is required';
+                  }
+                  final emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+                  if (!emailPattern.hasMatch(email)) {
+                    return 'Enter a valid email address';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _isSubmitting ? null : _submit,
+                  icon: _isSubmitting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.person_add_alt_1),
+                  label: Text(_isSubmitting ? 'Adding...' : 'Add Admin'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.iconPurple,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required bool isDark,
+    required Color textColor,
+    required Color borderColor,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      validator:
+          validator ??
+          (value) {
+            if ((value ?? '').trim().isEmpty) {
+              return '$label is required';
+            }
+            return null;
+          },
+      style: TextStyle(color: textColor),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: AppColors.getTextSecondary(isDark)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: borderColor),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.iconPurple, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Colors.redAccent),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
         ),
       ),
     );
