@@ -223,7 +223,7 @@ packages:
     source: hosted
     version: "5.2.1"
   flutter_inappwebview:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: flutter_inappwebview
       sha256: "3e9a443a18ecef966fb930c3a76ca5ab6a7aafc0c7b5e14a4a850cf107b09959"
@@ -973,14 +973,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.3"
-  youtube_player_flutter:
-    dependency: "direct main"
-    description:
-      name: youtube_player_flutter
-      sha256: "30f84e2f7063c56e536f507e37c1e803546842707cf58e5b5a71253b9ff9b455"
-      url: "https://pub.dev"
-    source: hosted
-    version: "9.0.4"
 sdks:
   dart: ">=3.11.3 <4.0.0"
   flutter: ">=3.38.4"
