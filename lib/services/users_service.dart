@@ -4,6 +4,39 @@ import '../models/app_user.dart';
 import 'api_client.dart';
 
 class UsersService {
+  Future<void> requestPasswordReset(String email) async {
+    final response = await ApiClient.post('/api/users/password/forgot', {
+      'email': email,
+    });
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        _extractError(
+          response.body,
+          fallback: 'Failed to request password reset',
+        ),
+      );
+    }
+  }
+
+  Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    final response = await ApiClient.put('/api/users/me/password', {
+      'oldPassword': oldPassword,
+      'newPassword': newPassword,
+      'confirmPassword': confirmPassword,
+    });
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        _extractError(response.body, fallback: 'Failed to change password'),
+      );
+    }
+  }
+
   Future<List<AppUser>> fetchUsers() async {
     final response = await ApiClient.get('/users');
 

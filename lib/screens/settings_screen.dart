@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'change_password_screen.dart';
 import '../providers/theme_provider.dart';
 import '../providers/user_provider.dart';
 import '../utils/colors.dart';
 import '../utils/constants.dart';
 import '../widgets/settings/settings_section.dart';
+import '../widgets/settings/settings_tile.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -16,7 +18,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final TextEditingController _ipController = TextEditingController();
   final TextEditingController _macController = TextEditingController();
-  
+
   double? _localSensitivity;
 
   @override
@@ -74,21 +76,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const SizedBox(height: AppConstants.paddingXl),
                       if (userProvider.error != null)
                         Padding(
-                          padding: const EdgeInsets.only(bottom: AppConstants.paddingDefault),
+                          padding: const EdgeInsets.only(
+                            bottom: AppConstants.paddingDefault,
+                          ),
                           child: Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: Colors.redAccent.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(AppConstants.radiusSm),
+                              borderRadius: BorderRadius.circular(
+                                AppConstants.radiusSm,
+                              ),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.error_outline, color: Colors.redAccent),
+                                const Icon(
+                                  Icons.error_outline,
+                                  color: Colors.redAccent,
+                                ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     'Error: ${userProvider.error}',
-                                    style: const TextStyle(color: Colors.redAccent),
+                                    style: const TextStyle(
+                                      color: Colors.redAccent,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -96,6 +107,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                         ),
                       _buildSecurityConfiguration(isDark, userProvider),
+                      const SizedBox(height: AppConstants.paddingLg),
+                      _buildAccountSecurity(isDark),
                       const SizedBox(height: AppConstants.paddingLg),
                       _buildWhitelistManagement(isDark, userProvider),
                       const SizedBox(height: AppConstants.paddingLg),
@@ -178,7 +191,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
           label: 'Simulation Mode',
           subtitle: 'Test alerts without real threats',
           value: simulation,
-          onChanged: (value) => _updateSecurity(userProvider, simulation: value),
+          onChanged: (value) =>
+              _updateSecurity(userProvider, simulation: value),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAccountSecurity(bool isDark) {
+    return SettingsSection(
+      title: 'Account Security',
+      isDark: isDark,
+      children: [
+        SettingsTile(
+          icon: Icons.lock_outline,
+          label: 'Change Password',
+          value: 'Update your login password',
+          iconColor: AppColors.iconPink,
+          isDark: isDark,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ChangePasswordScreen()),
+            );
+          },
         ),
       ],
     );
@@ -186,7 +222,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildSensitivityRow(bool isDark, UserProvider userProvider) {
     final settings = userProvider.settings;
-    final currentSensitivity = _localSensitivity ?? settings?.security.detectionSensitivity ?? 0.5;
+    final currentSensitivity =
+        _localSensitivity ?? settings?.security.detectionSensitivity ?? 0.5;
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -205,7 +242,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   color: AppColors.iconPurple.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(AppConstants.radiusSm),
                 ),
-                child: const Icon(Icons.speed, color: AppColors.iconPurple, size: 24),
+                child: const Icon(
+                  Icons.speed,
+                  color: AppColors.iconPurple,
+                  size: 24,
+                ),
               ),
               const SizedBox(width: AppConstants.paddingDefault),
               Expanded(
@@ -228,7 +269,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.iconPink.withOpacity(0.18),
-                        borderRadius: BorderRadius.circular(AppConstants.radiusSm),
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.radiusSm,
+                        ),
                       ),
                       child: Text(
                         _getSensitivityLabel(currentSensitivity),
@@ -257,7 +300,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _localSensitivity = value;
               });
             },
-            onChangeEnd: (value) => _updateSecurity(userProvider, sensitivity: value),
+            onChangeEnd: (value) =>
+                _updateSecurity(userProvider, sensitivity: value),
           ),
         ],
       ),
@@ -307,7 +351,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           label: 'Email Alerts',
           subtitle: 'Receive security alerts via email',
           value: email,
-          onChanged: (value) => _updateNotifications(userProvider, email: value),
+          onChanged: (value) =>
+              _updateNotifications(userProvider, email: value),
         ),
         _buildToggleRow(
           isDark: isDark,
@@ -378,11 +423,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeColor: iconColor,
-          ),
+          Switch(value: value, onChanged: onChanged, activeColor: iconColor),
         ],
       ),
     );
@@ -423,9 +464,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.getCardColor(isDark),
                     borderRadius: BorderRadius.circular(AppConstants.radiusLg),
-                    border: Border.all(
-                      color: AppColors.getBorderColor(isDark),
-                    ),
+                    border: Border.all(color: AppColors.getBorderColor(isDark)),
                   ),
                   child: TextField(
                     controller: controller,
@@ -475,16 +514,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   (item) => Chip(
                     label: Text(
                       item,
-                      style: TextStyle(
-                        color: AppColors.getTextPrimary(isDark),
-                      ),
+                      style: TextStyle(color: AppColors.getTextPrimary(isDark)),
                     ),
                     backgroundColor: isDark
                         ? Colors.white10
                         : Colors.grey.shade100,
-                    side: BorderSide(
-                      color: AppColors.getBorderColor(isDark),
-                    ),
+                    side: BorderSide(color: AppColors.getBorderColor(isDark)),
                     deleteIcon: Icon(
                       Icons.close,
                       size: 18,
@@ -513,7 +548,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       await provider.updateSecuritySettings(
         anomaly: anomaly ?? currentSettings?.anomalyDetectionEnabled ?? true,
-        sensitivity: sensitivity ?? currentSettings?.detectionSensitivity ?? 0.5,
+        sensitivity:
+            sensitivity ?? currentSettings?.detectionSensitivity ?? 0.5,
         autoBlock: autoBlock ?? currentSettings?.autoBlockThreats ?? false,
         simulation: simulation ?? currentSettings?.simulationMode ?? false,
       );
@@ -554,9 +590,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _ipController.clear();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add IP: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to add IP: $e')));
       }
     }
   }
@@ -569,21 +605,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _macController.clear();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add MAC: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to add MAC: $e')));
       }
     }
   }
 
-  Future<void> _deleteWhitelistItem(UserProvider provider, String type, String value) async {
+  Future<void> _deleteWhitelistItem(
+    UserProvider provider,
+    String type,
+    String value,
+  ) async {
     try {
       await provider.removeWhitelistItem(type: type, value: value);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to remove item: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to remove item: $e')));
       }
     }
   }
