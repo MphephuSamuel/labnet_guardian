@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 import '../utils/colors.dart';
 import '../widgets/analytics/stats_card.dart';
 import '../widgets/analytics/network_traffic_chart.dart';
-import '../widgets/analytics/bandwidth_line_chart.dart';  // Changed from bandwidth_bar_chart
+import '../widgets/analytics/bandwidth_line_chart.dart';
 import '../widgets/analytics/threat_timeline_chart.dart';
 import '../services/pdf_service.dart';
 import '../services/analytics_service.dart';
@@ -18,7 +20,6 @@ class AnalyticsScreen extends StatefulWidget {
 
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
   String selectedRange = "Week";
-  bool isDarkMode = true;
   bool isLoading = true;
   AnalyticsModel? analytics;
   List<Map<String, dynamic>> anomalies = [];
@@ -74,9 +75,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+    
     final bgColor = AppColors.getBgColor(isDarkMode);
     final cardColor = AppColors.getCardColor(isDarkMode);
     final textPrimary = AppColors.getTextPrimary(isDarkMode);
+    final textSecondary = AppColors.getTextSecondary(isDarkMode);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -97,7 +102,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               isDarkMode ? Icons.dark_mode : Icons.light_mode,
               color: textPrimary,
             ),
-            onPressed: () => setState(() => isDarkMode = !isDarkMode),
+            onPressed: () => themeProvider.toggleTheme(),
           ),
           IconButton(
             icon: Icon(Icons.refresh, color: textPrimary),
@@ -116,9 +121,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildFilterRow(cardColor),
+                    _buildFilterRow(cardColor, isDarkMode),
                     const SizedBox(height: 20),
-                    _buildStatsGrid(),
+                    _buildStatsGrid(isDarkMode),
                     const SizedBox(height: 25),
                     Text(
                       "Network Traffic",
@@ -136,7 +141,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       style: TextStyle(color: textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 10),
-                    BandwidthLineChart(  // Changed from BandwidthBarChart
+                    BandwidthLineChart(
                       range: selectedRange,
                       isDarkMode: isDarkMode,
                       bandwidthData: analytics?.bandwidth ?? [],
@@ -160,6 +165,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             range: selectedRange,
                             bandwidthData: {
                               "averageBandwidth": analytics?.averageBandwidth ?? 0,
+                              "activeDevices": analytics?.activeDevices ?? 0,
                             },
                             threats: analytics?.threats ?? [],
                             anomalies: anomalies,
@@ -183,7 +189,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildFilterRow(Color cardColor) {
+  Widget _buildFilterRow(Color cardColor, bool isDarkMode) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -221,7 +227,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildStatsGrid() {
+  Widget _buildStatsGrid(bool isDarkMode) {
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
@@ -233,7 +239,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         StatsCard(
           title: "Avg Bandwidth",
           value: "${analytics?.averageBandwidth.toStringAsFixed(1) ?? 0} MB/s",
-          change: _formatChange(analytics?.averageBandwidthChange ?? 0.0),
           icon: Icons.wifi,
           color: AppColors.iconBlue,
           isDarkMode: isDarkMode,
@@ -241,7 +246,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         StatsCard(
           title: "Active Devices",
           value: "${analytics?.activeDevices ?? 0}",
-          change: _formatChange((analytics?.activeDevicesChange ?? 0).toDouble()),
           icon: Icons.devices,
           color: AppColors.connection,
           isDarkMode: isDarkMode,
@@ -249,7 +253,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         StatsCard(
           title: "Threats Blocked",
           value: "${analytics?.threatsBlocked ?? 0}",
-          change: _formatChange((analytics?.threatsChange ?? 0).toDouble()),
           icon: Icons.security,
           color: AppColors.critical,
           isDarkMode: isDarkMode,
@@ -257,18 +260,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         StatsCard(
           title: "Anomalies",
           value: "${analytics?.anomalies ?? 0}",
-          change: _formatChange((analytics?.anomaliesChange ?? 0).toDouble()),
           icon: Icons.warning,
           color: AppColors.warning,
           isDarkMode: isDarkMode,
         ),
       ],
     );
-  }
-
-  String _formatChange(double change) {
-    if (change == 0) return "0%";
-    final sign = change > 0 ? "+" : "";
-    return "$sign${change.toStringAsFixed(1)}%";
   }
 }
