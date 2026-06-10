@@ -8,6 +8,7 @@ import '../../screens/settings_screen.dart';
 import '../../screens/login_screen.dart';
 import '../../screens/analytics_screen.dart';
 import '../../screens/help&support.dart';
+import '../../screens/users_screen.dart';
 
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({super.key});
@@ -191,6 +192,22 @@ class CustomDrawer extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (context) => const AdvancedSearchScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildMenuItem(
+                    icon: Icons.group_outlined,
+                    title: 'Users',
+                    iconBgColor: const Color(0xFF10B981).withValues(alpha: 0.1),
+                    iconColor: const Color(0xFF10B981),
+                    textColor: textColor,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const UsersScreen(),
                         ),
                       );
                     },
