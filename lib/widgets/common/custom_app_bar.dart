@@ -30,12 +30,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             themeProvider.toggleTheme();
           },
         ),
-        IconButton(
-          icon: const Icon(Icons.notifications_none),
-          onPressed: () {
-            // Notifications logic
-          },
-        ),
         GestureDetector(
           onTap: () {
             Navigator.of(context).push(
